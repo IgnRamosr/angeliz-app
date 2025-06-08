@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@media (min-width: 1056px) {
+  .custom-pt {
+    padding-top: 18.75rem; /* pt-75 equivalente a 75 * 0.25rem */
+  }
+
+  .custom-mt{
+        margin-top: 8rem; 
+  }
+}
+
+
