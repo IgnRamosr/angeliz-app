@@ -76,7 +76,7 @@ return (
 
         <div className="flex flex-col">
         <button type="submit" className="bg-[#FF6E9D] hover:bg-[#6F2521] hover:text-white transition-all cursor-pointer px-4 py-2 sm:mt-20 md:mt-8 max-sm:mt-20  mb-5 rounded-xl">Registrarme</button>
-        <Link to={"/"} className="text-center text-[#FF6E9D] hover:text-[#6F2521] transform-all">¿Ya tienes una cuenta? inicia sesión aquí</Link>
+        <Link to={"/inicio"} className="text-center text-[#FF6E9D] hover:text-[#6F2521] transform-all">¿Ya tienes una cuenta? inicia sesión aquí</Link>
         </div>
 
     </form>
