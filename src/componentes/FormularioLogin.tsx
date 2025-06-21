@@ -33,7 +33,7 @@ export const FormularioLogin = () => {
           return
         }
 
-        redirigir('/MenuPrincipal');
+        redirigir('/');
 
     }
 

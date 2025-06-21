@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom"
 import { BarraNavegacion } from "../componentes/BarraNavegacion"
-import { PiePagina } from "../componentes/PiePagina"
+// import { PiePagina } from "../componentes/PiePagina"
 
 export const MenuPrincipal = () => {
   return (
@@ -9,7 +9,7 @@ export const MenuPrincipal = () => {
     <main className="flex-grow">
       <Outlet/>
     </main>
-    <PiePagina/>
+    {/* <PiePagina/> */}
     </div>
   )
 }
