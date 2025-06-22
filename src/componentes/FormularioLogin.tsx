@@ -38,18 +38,18 @@ export const FormularioLogin = () => {
     }
 
   return (
-    <div className="relative w-full h-full bg-white p-6 pt-4 rounded-xl shadow-lg">
+    <div className="relative min-h-screen w-full bg-white p-6 pt-4 rounded-xl shadow-lg">
 
       <img src={logo} alt="Logo" className="absolute -top-10 left-1/2 -translate-x-1/2  w-80 pointer-events-none" />
 
-      <form onSubmit={enviarFormulario} className=" max-sm:pt-56 sm:pt-75 md:pt-48 custom-pt flex flex-col sm:gap-15 max-sm:gap-5 md:gap-10 ">
+      <form onSubmit={enviarFormulario} className=" max-sm:pt-56 max-sm:gap-5 sm:pt-75 sm:gap-15 md:gap-10 custom-pt flex flex-col ">
 
         <CampoInput label={"Correo electrónico"} type={"email"} id={"correo"} value={credenciales.correo} onChange={actualizarCambiosFormulario}/>
 
         <CampoInput label={"Contraseña"} type={"password"} id={"contraseña"} value={credenciales.contraseña} onChange={actualizarCambiosFormulario}/>
 
         <div className="flex flex-col">
-          <button type="submit" className="bg-[#FF6E9D] hover:bg-[#6F2521] hover:text-white transition-all cursor-pointer px-4 py-2 sm:mt-20 md:mt-8 max-sm:mt-20 custom-mt mb-5 rounded-xl">Ingresar</button>
+          <button type="submit" className="max-sm:mt-28 sm:mt-20 md:mt-64 custom-mt bg-[#FF6E9D] hover:bg-[#6F2521] hover:text-white transition-all cursor-pointer px-4 py-2 mb-5 rounded-full">Ingresar</button>
           <Link to={"/registro"} className="text-center text-[#FF6E9D] hover:text-[#6F2521] transform-all">¿No tienes una cuenta? Registrate aquí</Link>
         </div>
 

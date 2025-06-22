@@ -1,3 +1,7 @@
+//@ts-ignore 
+import daisyui from "daisyui";
+
+
 /** @type {import('tailwindcss').Config} */
 export const content = ['./index.html', './src/**/*.{js,ts,jsx,tsx}'];
 export const theme = {
@@ -7,4 +11,4 @@ export const theme = {
     },
   },
 };
-export const plugins = [];
+export const plugins = [daisyui];
