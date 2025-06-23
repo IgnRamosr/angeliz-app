@@ -60,7 +60,7 @@ export const FormularioRegistro = () => {
 return (
     <div className="relative w-full h-full bg-white p-6 pt-4 rounded-xl shadow-lg">
 
-    <img src={logo} alt="Logo" className="absolute -top-10 left-1/2 -translate-x-1/2  w-80 pointer-events-none" />
+    <img src={logo} alt="Logo" className="absolute top-15 left-1/2 -translate-x-1/2  w-80 pointer-events-none" />
 
     <form onSubmit={enviarFormulario} className=" max-sm:pt-56 sm:pt-75 md:pt-48  flex flex-col sm:gap-15 max-sm:gap-5 md:gap-8 ">
 
@@ -75,8 +75,8 @@ return (
         <CampoInput label={"Contraseña"} type={"password"} id={"contraseña"} value={datosFormulario.contraseña} onChange={actualizarCambiosFormulario}/>
 
         <div className="flex flex-col">
-        <button type="submit" className="bg-[#FF6E9D] hover:bg-[#6F2521] hover:text-white transition-all cursor-pointer px-4 py-2 sm:mt-20 md:mt-8 max-sm:mt-20  mb-5 rounded-xl">Registrarme</button>
-        <Link to={"/inicio"} className="text-center text-[#FF6E9D] hover:text-[#6F2521] transform-all">¿Ya tienes una cuenta? inicia sesión aquí</Link>
+        <button type="submit" className=" bg-[#FF6E9D] hover:bg-[#C9A742] text-[#f8f8f8] hover:text-white transition-all cursor-pointer font-medium  mb-5 rounded-full px-4 py-2 sm:mt-20 md:mt-8 max-sm:mt-20">Registrarme</button>
+        <Link to={"/inicio"} className="text-center text-[#FF6E9D] hover:text-[#C9A742] transform-all">¿Ya tienes una cuenta? inicia sesión aquí</Link>
         </div>
 
     </form>
