@@ -13,11 +13,14 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.49.8",
     "@tailwindcss/vite": "^4.1.7",
+    "classnames": "^2.5.1",
     "flowbite-react": "^0.11.8",
     "lucide-react": "^0.519.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
+    "react-phone-input-2": "^2.15.1",
     "react-router-dom": "^7.6.0",
+    "react-toastify": "^11.0.5",
     "tailwindcss": "^4.1.7"
   },
   "devDependencies": {
