@@ -19,7 +19,7 @@ export const Productos = () => {
           if (!imagenPrincipal) return null;
 
           return(
-            <CardProducto nombre={producto.nombre} precio={producto.precio_base} imagenURL={imagenPrincipal?.url}/>
+            <CardProducto key={producto.id} nombre={producto.nombre} precio={producto.precio_base} imagenURL={imagenPrincipal?.url}/>
           )
 
 

@@ -67,7 +67,6 @@ export const FormularioLogin = () => {
           <Link to={"/registro"} className="text-center text-[#FF6E9D] hover:text-[#C9A742] transform-all">¿No tienes una cuenta? Registrate aquí</Link>
         </div>
 
-
       </form>
 
 

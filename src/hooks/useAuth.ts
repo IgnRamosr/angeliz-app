@@ -25,5 +25,7 @@ export const useAutenticacion = () =>{
     return {data,error}
   }
 
-    return{registrarse, iniciarSesion}
+  const cerrarSesion = async () => { await supabase.auth.signOut();}
+
+    return{registrarse, iniciarSesion, cerrarSesion}
 }

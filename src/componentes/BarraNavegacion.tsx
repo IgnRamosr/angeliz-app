@@ -1,19 +1,36 @@
-// import { Link } from "react-router-dom"
-import {UserCircleIcon} from "lucide-react"
+// import {UserCircleIcon} from "lucide-react"
+import useUserSession from "../hooks/useUserSession"
+import { LinksBarraNavegacion } from "./LinksBarraNavegacion";
 const logo = new URL('../assets/imagenes/logo.png', import.meta.url).href
 
 export const BarraNavegacion = () => {
+
+    const sesion = useUserSession();
+
+
 return (
-    <header className="relative bg-[#fff0f5] top-0 left-0 h-26 w-full  flex items-center justify-center">
+    <header className="bg-[#fff0f5]  h-26 w-full  flex items-center">
 
-      <UserCircleIcon className="absolute text-[#6F2521] left-28 w-16 h-12 cursor-pointer red"/>
+      {/* <UserCircleIcon className="absolute text-[#6F2521] left-28 w-16 h-12 cursor-pointer red"/> */}
 
-      <img src={logo} alt="Logo-Angeliz" className=" w-68 object-contain" /> 
+      <nav className="flex flex-1 justify-start ml-4">
+        <LinksBarraNavegacion sesion={sesion} />
+      </nav>
 
-      <div className="absolute right-36 flex items-center">
+      <div className="flex-none">
+        <img
+          src={logo}
+          alt="Logo Angeliz"
+          className="w-68 object-contain"
+        />
+      </div>
 
-        <input type="text" placeholder="Buscar..." className="flex justify-center w-80 bg-[#FDDEE8] outline-none focus:border-2 focus:ring focus:ring-[#6F2521] focus:border-[#6F2521] px-4 py-2 rounded-full" />
-
+      <div className="flex flex-1 justify-end mr-4">
+        <input
+          type="text"
+          placeholder="Buscar..."
+          className="w-72 bg-[#FDDEE8] px-4 py-2 rounded-full outline-none focus:ring focus:ring-[#C9A742]"
+        />
       </div>
 
     </header>
