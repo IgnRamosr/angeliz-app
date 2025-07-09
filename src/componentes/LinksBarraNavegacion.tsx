@@ -14,9 +14,9 @@ export const LinksBarraNavegacion = ({ sesion }: LinksProps) => {
     const validarUsuario = sesion?.user;
 
     return (
-    <div className="">
+    <div className="max-sm:hidden sm:hidden lg:flex">
         {!validarUsuario &&(
-        <div className="flex list-none gap-12">
+        <div className="flex list-none lg:gap-8 xl:gap-12">
             <li className="text-[#6F2521] font-medium hover:text-[#C9A742] transition-colors">
                 <Link to={'/inicio'}>Iniciar sesión</Link>
             </li>
@@ -26,7 +26,7 @@ export const LinksBarraNavegacion = ({ sesion }: LinksProps) => {
         </div>
         )}
         {validarUsuario &&(
-        <div className="flex list-none gap-12">
+        <div className="flex list-none lg:gap-8 xl:gap-12">
             <li className="text-[#6F2521] font-medium hover:text-[#C9A742] transition-colors">
                 <Link to={'/'}>Productos</Link>
             </li>
