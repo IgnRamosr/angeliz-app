@@ -1,5 +1,6 @@
 import { CardProducto } from "../componentes/CardProducto";
 import { Separador } from "../componentes/Separador";
+import { Titulo } from "../componentes/Titulo";
 import { useProducts } from "../hooks/useProducts"
 
 
@@ -11,6 +12,7 @@ export const Productos = () => {
     <div>
 
       <Separador/>
+      
 
       <div className=" grid grid-cols-1 md:grid-cols-3 gap-4 p-4 items-center justify-items-center">
         {productos.map((producto) => {

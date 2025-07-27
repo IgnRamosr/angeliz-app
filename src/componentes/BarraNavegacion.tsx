@@ -35,7 +35,7 @@ return (
         <img
           src={logo}
           alt="Logo Angeliz"
-          className="max-sm:w-52 sm:w-60 lg:w-68 object-contain"
+          className="max-sm:w-52 sm:w-64 lg:w-68 object-contain"
         />
       </div>
 
@@ -54,7 +54,7 @@ return (
 
       {/*BARRA LATERAL*/}
 
-      <BarraLateral estado={abrir}></BarraLateral>
+      <BarraLateral estado={abrir} cambiarEstado={cerrar}></BarraLateral>
 
     </header>
 )
