@@ -5,6 +5,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { ProveedorFuncionesCarrito } from './componentes/useCart';
 import { useEffect } from 'react';
 import { useAutenticacion } from './hooks/useAuth';
+import { Analytics } from "@vercel/analytics/react"
 
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
 
     return (
     <>
+    <Analytics/>
         <ProveedorFuncionesCarrito >
             <Enrutador/>
             <ToastContainer position="top-center" autoClose={3000} limit={1}/>
