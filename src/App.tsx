@@ -18,7 +18,7 @@ function App() {
 
     return (
     <>
-    <Analytics/>
+    {/* <Analytics/> */}
         <ProveedorFuncionesCarrito >
             <Enrutador/>
             <ToastContainer position="top-center" autoClose={3000} limit={1}/>

@@ -8,6 +8,7 @@ import { CarritoDeCompras } from '../../paginas/CarritoDeCompras';
 import { MisPedidos } from '../../paginas/MisPedidos';
 import NoEncontrado from '../../paginas/NoEncontrado';
 import { AgradecimientoPostCompra } from '../../paginas/SolicitudExitosa';
+import ProductoDetalleNombre from '../../paginas/ProductoDetalleNombre';
 
 
 
@@ -20,6 +21,7 @@ return (
             <Route path='/' element={<MenuPrincipal/>}>
                 <Route path='/' element={<Productos/>}></Route>
                 <Route path='producto/:id' element={<ProductoDetalle/>}></Route>
+                <Route path='BuscarProducto/:nombre' element={<ProductoDetalleNombre/>}></Route>
                 <Route path='/carrito' element={<CarritoDeCompras/>}></Route>
                 <Route path='/pedidos' element={<MisPedidos/>}></Route>
                 <Route path='/solicitudExitosa' element={<AgradecimientoPostCompra/>}></Route>

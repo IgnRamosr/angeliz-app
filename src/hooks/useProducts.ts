@@ -73,7 +73,7 @@ export const useProductSearch = () => {
 
             const {data,error} = await supabase
             .from("productos")
-            .select("id, nombre, descripcion, precio_base, tipo_formulario, subcategoria_id , imagenes_producto, tamano_producto, sabor_producto")
+            .select("id, nombre, descripcion, precio_base, tipo_formulario, subcategoria_id , imagenes_producto(url, es_principal), tamano_producto(tamano_id:id,tamano), sabor_producto(sabor_id,sabores(nombre))")
             .or(`nombre.ilike.%${busqueda}%,descripcion.ilike.%${busqueda}%`)
             .limit(30);
             setCargando(false);
@@ -83,7 +83,7 @@ export const useProductSearch = () => {
                 setProductos([]);
                 return;
             }
-            setProductos(data ?? [])
+            setProductos((data ?? []) as unknown as Producto[]);
         },
         [],
     )
