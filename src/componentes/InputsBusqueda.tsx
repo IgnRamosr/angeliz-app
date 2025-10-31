@@ -41,6 +41,14 @@ export const InputsBusquedaMovil = () => {
     const [term, setTerm] = useState("");
     const redirigir = useNavigate();
 
+        const presionaEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if(e.key === "Enter"){
+            const nombre = term.trim();
+            if(!nombre) return;
+            redirigir(`/BuscarProducto/${nombre}`);
+        }
+    };
+
         const presionaBotonBuscar = () => {
             const nombre = term.trim();
             if(!nombre) return;
@@ -53,6 +61,7 @@ export const InputsBusquedaMovil = () => {
             <input
             type="text"
             onChange={(e) => setTerm(e.target.value)}
+            onKeyDown={presionaEnter}
             placeholder="Buscar..."
             className="text-sm rounded-l-full w-full px-4 py-2 outline-none bg-transparent"
             />
