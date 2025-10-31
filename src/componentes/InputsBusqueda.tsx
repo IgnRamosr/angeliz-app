@@ -41,34 +41,41 @@ export const InputsBusquedaMovil = () => {
     const [term, setTerm] = useState("");
     const redirigir = useNavigate();
 
-        const presionaEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if(e.key === "Enter"){
-            const nombre = term.trim();
-            if(!nombre) return;
-            redirigir(`/BuscarProducto/${nombre}`);
-        }
-    };
-
-        const presionaBotonBuscar = () => {
+        const presionaEnter = (e: React.FormEvent<HTMLFormElement>) => {
+            e.preventDefault();
             const nombre = term.trim();
             if(!nombre) return;
             redirigir(`/BuscarProducto/${nombre}`);
     };
 
     return (
-    <div className="w-full flex justify-center lg:hidden mt-3 mb-3 px-4">
-        <div className="flex items-center bg-[#FDDEE8] border border-gray-300 rounded-full focus-within:ring-[#C9A742] focus-within:border-[#C9A742] w-full ">
+        <div className="w-full flex justify-center lg:hidden mt-3 mb-3 px-4">
+        <form
+            onSubmit={presionaEnter}
+            className="flex items-center bg-[#FDDEE8] border border-gray-300 rounded-full focus-within:ring-[#C9A742] focus-within:border-[#C9A742] w-full"
+            role="search"
+            aria-label="Buscar productos"
+        >
             <input
-            type="text"
+            type="search"
+            value={term}
             onChange={(e) => setTerm(e.target.value)}
-            onKeyDown={presionaEnter}
             placeholder="Buscar..."
+            // tips para móviles:
+            enterKeyHint="search"     // muestra “Buscar” en el teclado
+            inputMode="search"        // sugiere teclado de búsqueda
+            autoCorrect="off"
+            autoCapitalize="none"
             className="text-sm rounded-l-full w-full px-4 py-2 outline-none bg-transparent"
             />
-            <button className="px-4 text-[#6F2521]">
-            <Search onClick={presionaBotonBuscar} className="w-4 h-4" />
+            <button
+            type="submit"             
+            className="px-4 text-[#6F2521]"
+            aria-label="Buscar"
+            >
+            <Search className="w-4 h-4" />
             </button>
+        </form>
         </div>
-    </div>
     );
 };
