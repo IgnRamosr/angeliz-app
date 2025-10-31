@@ -5,6 +5,7 @@ import { BotonBarraLateral } from "./BotonBarraLateral";
 import { BotonCarritoDeCompras } from "./BotonCarrito";
 import { LinksBarraNavegacion } from "./LinksBarraNavegacion";
 import { InputsBusqueda, InputsBusquedaMovil } from "./InputsBusqueda";
+import { useNavigate } from "react-router-dom";
 const logo = new URL('../assets/imagenes/logo.png', import.meta.url).href
 
 export const BarraNavegacion = () => {
@@ -14,6 +15,8 @@ export const BarraNavegacion = () => {
     const [abrir, setAbrir] = useState(false);
 
     const cerrar = () => setAbrir((o: boolean) => !o);
+
+    const redirigir = useNavigate();
 
 
 return (
@@ -29,13 +32,17 @@ return (
         <BotonBarraLateral estado={abrir} cambiarEstado={cerrar}></BotonBarraLateral>
       </nav>
 
+      {/*BARRA LATERAL*/}
+
+      <BarraLateral estado={abrir} cambiarEstado={cerrar}></BarraLateral>
+
       {/*LOGO ANGELIZ*/}
 
-      <div className="flex-none">
+      <div className="flex-none" onClick={() => {redirigir("/")}}>
         <img
           src={logo}
           alt="Logo Angeliz"
-          className="max-sm:w-52 sm:w-64 lg:w-68 object-contain"
+          className="max-sm:w-52 sm:w-64 lg:w-55 object-contain hover:cursor-pointer"
         />
       </div>
 
@@ -51,10 +58,6 @@ return (
       <InputsBusqueda/>
 
       <InputsBusquedaMovil/>
-
-      {/*BARRA LATERAL*/}
-
-      <BarraLateral estado={abrir} cambiarEstado={cerrar}></BarraLateral>
 
     </header>
 )

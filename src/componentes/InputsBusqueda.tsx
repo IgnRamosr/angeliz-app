@@ -1,7 +1,21 @@
 import { Search } from "lucide-react";
 import { BotonCarritoDeCompras } from "./BotonCarrito";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export const InputsBusqueda = () => {
+
+    const [term, setTerm] = useState("");
+    const redirigir = useNavigate();
+
+    const presionaEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if(e.key === "Enter"){
+            const busqueda = term.trim();
+            if(!busqueda) return;
+            redirigir(`/producto?busqueda=${encodeURIComponent(busqueda)}`)
+        }
+    };
+
 return (
     <div className="lg:flex lg:flex-1 lg:justify-end lg:mr-8 xl:mr-16 max-sm:hidden sm:hidden gap-8">
 
@@ -11,6 +25,9 @@ return (
 
         <input
         type="text"
+        value={term}
+        onChange={(e) => setTerm(e.target.value)}
+        onKeyDown={presionaEnter}
         placeholder="Buscar..."
         className="bg-[#FDDEE8] border outline-none border-gray-300 text-sm rounded-full block w-72 p-2.5 focus:ring-[#C9A742] focus:border-[#C9A742]"
         />

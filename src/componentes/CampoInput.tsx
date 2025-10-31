@@ -1,18 +1,10 @@
 
-type InputFieldProps = {
-    label: string
-    type: string
-    id: string
-    value: string
-    onChange: (e: React.ChangeEvent<HTMLInputElement>) => void,
-    error: string
-    min?: number
-    max?: number
-}
+import type {InputCampo} from "../assets/types-interfaces/types"
+
 
 const estiloPorDefecto = "bg-[#FDDEE8] border outline-none border-gray-300 text-sm rounded-full block w-full p-2.5 focus:ring-[#C9A742] focus:border-[#C9A742]"
 
-export const CampoInput = ({label, type, id, value, onChange, error, min, max}: InputFieldProps) => {
+export const CampoInput = ({label, type, id, value, onChange, error, min, max}: InputCampo) => {
     return (
         <div className="flex flex-col gap-5 w-full max-w-screen">
         <label className="block mb-2 text-lg font-medium text-[#C9A742]">{label}</label>

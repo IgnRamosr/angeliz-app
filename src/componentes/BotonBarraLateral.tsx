@@ -1,10 +1,6 @@
 import { Menu, X } from "lucide-react";
+import type {PropsBotonBarraLat} from "../assets/types-interfaces/interfaces"
 
-interface PropsBotonBarraLat {
-
-    estado : boolean;
-    cambiarEstado: () => void;
-}
 
 
 export const BotonBarraLateral = ({estado, cambiarEstado}: PropsBotonBarraLat) => {

@@ -1,11 +1,5 @@
 import { useState } from "react";
-
-type Validaciones ={
-    [key: string]: {
-        regex: RegExp
-        mensaje: string
-    }
-}
+import type {Validaciones} from "../assets/types-interfaces/types"
 
 const validacionesBase: Validaciones = {
     nombre: {

@@ -1,15 +1,10 @@
 import PhoneInput from 'react-phone-input-2'
+import type {InputCampoTelefono} from "../assets/types-interfaces/types"
 
-type InputFieldProps = {
-    label: string
-    value: string
-    onChange: (nuevoValor: string) => void
-    error: string
-}
 
 const estiloPorDefecto = "bg-[#FDDEE8] border outline-none border-gray-300 text-sm rounded-full block w-full p-2.5 focus:ring-[#C9A742] focus:border-[#C9A742]"
 
-export const InputTelefono = ({label,value, onChange, error}: InputFieldProps) => {
+export const InputTelefono = ({label,value, onChange, error}: InputCampoTelefono) => {
 return (
     <>
     <label className="block mb-2 text-lg font-medium text-[#C9A742]">{label}</label>

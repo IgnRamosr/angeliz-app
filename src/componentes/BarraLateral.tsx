@@ -1,12 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { LinksBarraNavegacion } from "./LinksBarraNavegacion";
 import useUserSession from "../hooks/useUserSession";
-
-
-interface PropsBarraLateral {
-    estado: boolean;
-    cambiarEstado: () => void;
-}
+import type {PropsBarraLateral} from "../assets/types-interfaces/interfaces"
 
 
 
