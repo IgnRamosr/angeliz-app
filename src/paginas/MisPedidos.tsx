@@ -2,12 +2,14 @@ import { useEffect, useState } from "react"
 import { listarPedidosUsuario } from "../hooks/useOrders"
 import type { PedidoConItems } from "../assets/types-interfaces/types";
 import { Package, Calendar, Cake, Users, Truck, Clock } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
+import { useUserRole } from "../hooks/useUserProfile";
 
 export const MisPedidos = () => {
 const [items, setItems] = useState<PedidoConItems[]>([]);
 const [loading, setLoading] = useState<boolean>(true);
 const redirigir = useNavigate();
+const {esAdmin} = useUserRole();
 
 useEffect(() => {
 (async () => {
@@ -22,6 +24,10 @@ setLoading(false);
 })();
 }, [])
 
+
+if (esAdmin) {
+    return <Navigate to="/admin" replace />;
+}
 
 
 if (loading) {

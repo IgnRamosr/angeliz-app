@@ -2,13 +2,17 @@ import {BrowserRouter, Routes, Route} from 'react-router-dom';
 import { Login } from '../../paginas/Login';
 import { Registro } from '../../paginas/Registro';
 import { MenuPrincipal } from '../../paginas/MenuPrincipal';
-import { Productos } from '../../paginas/Productos';
+// import { Productos } from '../../paginas/Productos';
 import { ProductoDetalle } from '../../paginas/ProductoDetalle';
 import { CarritoDeCompras } from '../../paginas/CarritoDeCompras';
 import { MisPedidos } from '../../paginas/MisPedidos';
 import NoEncontrado from '../../paginas/NoEncontrado';
 import { AgradecimientoPostCompra } from '../../paginas/SolicitudExitosa';
 import ProductoDetalleNombre from '../../paginas/ProductoDetalleNombre';
+import SeccionesPorSubcategoria from '../../paginas/SeccionesPorSubcategoria';
+import ModuloAdministracion from '../../paginas/ModuloAdministracion';
+import AdminPedidoDetalle from '../../componentes/AdminPedidoDetalle';
+import RequiereAdmin from '../../componentes/RequiereAdmin';
 
 
 
@@ -16,18 +20,31 @@ export const Enrutador = () => {
 return (
     <BrowserRouter>
         <Routes>
-            <Route path='/inicio' element={<Login/>}></Route>
-            <Route path='/registro' element={<Registro/>}></Route>
-            <Route path='/' element={<MenuPrincipal/>}>
-                <Route path='/' element={<Productos/>}></Route>
-                <Route path='producto/:id' element={<ProductoDetalle/>}></Route>
-                <Route path='BuscarProducto/:nombre' element={<ProductoDetalleNombre/>}></Route>
-                <Route path='/carrito' element={<CarritoDeCompras/>}></Route>
-                <Route path='/pedidos' element={<MisPedidos/>}></Route>
-                <Route path='/solicitudExitosa' element={<AgradecimientoPostCompra/>}></Route>
-                <Route path='*' element={<NoEncontrado/>}></Route>
-            </Route>
-            <Route path='*' element={<NoEncontrado/>}></Route>
+        {/* Rutas fuera del layout */}
+        <Route path="/inicio" element={<Login />} />
+        <Route path="/registro" element={<Registro />} />
+
+        {/* Layout principal con Outlet */}
+        <Route path="/" element={<MenuPrincipal />}>
+            <Route index element={<SeccionesPorSubcategoria />} />
+            <Route path="producto/:id" element={<ProductoDetalle />} />
+            <Route path="buscarProducto/:nombre" element={<ProductoDetalleNombre />} />
+            <Route path="carrito" element={<CarritoDeCompras />} />
+            <Route path="pedidos" element={<MisPedidos />} />
+            
+            <Route path="solicitudExitosa" element={<AgradecimientoPostCompra />} />
+
+
+            {/* Módulo admin y detalle */}
+            <Route path="admin" element={<RequiereAdmin><ModuloAdministracion /></RequiereAdmin>} />
+            <Route path="admin/pedido/:id" element={<RequiereAdmin><AdminPedidoDetalle /></RequiereAdmin>} />
+
+            {/* ÚNICO comodín dentro del layout */}
+            <Route path="*" element={<NoEncontrado />} />
+        </Route>
+
+        {/* Resguardo extra (opcional) */}
+        <Route path="*" element={<NoEncontrado />} />
         </Routes>
     </BrowserRouter>
 )

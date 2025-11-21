@@ -90,3 +90,57 @@ export const useProductSearch = () => {
     return{productos, cargando, error, buscar}
     
 }
+
+
+
+type Subcategoria = { id: number; nombre: string };
+
+type Grupo = { subcategoria: Subcategoria; productos: Producto[] };
+
+export function useProductosPorSubcategoria(limitPorSubcat = 12) {
+const [grupos, setGrupos] = useState<Grupo[]>([]);
+const [cargando, setCargando] = useState(true);
+const [error, setError] = useState<string | null>(null);
+
+useEffect(() => {
+(async () => {
+    setCargando(true);
+    setError(null);
+    // 1) Traer subcategorías visibles/ordenadas (ajusta según tu esquema)
+    const { data: subcats, error: e1 } = await supabase
+    .from("subcategorias")
+    .select("id, nombre")
+    .order("nombre", { ascending: true });
+
+    if (e1) { setError(e1.message); setCargando(false); return; }
+    if (!subcats?.length) { setGrupos([]); setCargando(false); return; }
+
+    // 2) Para cada subcat, traer productos (con imagen principal)
+    const promesas = subcats.map(async (s) => {
+    const { data: prods } = await supabase
+        .from("productos")
+        .select(`
+        id, nombre, precio_base,
+        imagenes_producto ( url, es_principal )
+        `)
+        .eq("subcategoria_id", s.id)
+        .limit(limitPorSubcat);
+
+    // Normaliza imagen principal al primero (opcional)
+    const productos = (prods ?? []).map((p) => {
+        const imgs = p.imagenes_producto ?? [];
+        const principal = imgs.find(i => i.es_principal) ?? imgs[0];
+        return { ...p, imagenes_producto: principal ? [principal] : [] };
+    });
+
+    return { subcategoria: s, productos } as Grupo;
+    });
+
+    const res = await Promise.all(promesas);
+    setGrupos(res);
+    setCargando(false);
+})();
+}, [limitPorSubcat]);
+
+return { grupos, cargando, error };
+}

@@ -7,12 +7,13 @@ const logo = new URL('../assets/imagenes/logo.png', import.meta.url).href
 
 import {useAutenticacion} from '../hooks/useAuth'
 import {useUserProfile} from '../hooks/useUserProfile'
-const { registrarse } = useAutenticacion()
-const { crearPerfil } = useUserProfile()
+const { registrarse, promoverAnonimo } = useAutenticacion()
+const { crearOActualizarPerfil } = useUserProfile()
 
 
 import { useValidation } from "../hooks/useValidation"
 import { InputTelefono } from "./InputTelefono"
+import { supabase } from "../supabase/supabaseClient"
 
 
 
@@ -44,46 +45,57 @@ export const FormularioRegistro = () => {
         validarCampo(id, value)
     }
 
-    const enviarFormulario = async (e: { preventDefault: () => void }) =>{
-        e.preventDefault();
+const enviarFormulario = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!validarFormularioCompleto(datosFormulario)) return;
 
-        if (!validarFormularioCompleto(datosFormulario)){
-            return
-        }
+  // ¿El usuario que navega ahora es anónimo?
+  const { data: u } = await supabase.auth.getUser();
+  const esAnon =
+    !!u.user && ((u.user as any).is_anonymous ?? u.user.app_metadata?.provider === "anon");
 
-        const{data,error} = await registrarse({
-            email: datosFormulario.correo.trim(),
-            password: datosFormulario.contraseña.trim()
-        })
+  // 1) Crear cuenta
+  const authRes = esAnon
+    ? await promoverAnonimo({
+        email: datosFormulario.correo.trim(),
+        password: datosFormulario.contraseña.trim(),
+      })
+    : await registrarse({
+        email: datosFormulario.correo.trim(),
+        password: datosFormulario.contraseña.trim(),
+      });
 
-        if (error || !data?.user) {
-            toast.error('Error, el usuario ya existe')
-            toast.clearWaitingQueue();
-            return;
-        }
+  if (authRes.error) {
+    // Errores típicos: email inválido, password muy corta (< 6), email ya usado, etc.
+    toast.error(authRes.error.message);
+    return;
+  }
 
-        const userId = data.user.id;
+  // 2) Obtener el id para el perfil
+  const userId =
+    authRes.data?.user?.id ?? authRes.data?.user?.id ?? u.user?.id ?? null;
 
-        const {error: errorPerfil} = await crearPerfil({
-            id: userId,
-            nombre: datosFormulario.nombre.trim().toUpperCase(),
-            apellido: datosFormulario.apellido.trim().toUpperCase(),
-            telefono: datosFormulario.telefono.trim()
-        })
+  if (!userId) {
+    // Probablemente confirmación por correo activada
+    toast.info("Revisa tu correo y confirma tu cuenta para completar el registro.");
+    return;
+  }
 
-        if (errorPerfil) {
-        toast.error('Error al intentar crear el usuario')
-        toast.clearWaitingQueue();
-        return;
-        }
+  // 3) Crear/actualizar perfil
+  const { error: errorPerfil } = await crearOActualizarPerfil({
+    id: userId,
+    nombre: datosFormulario.nombre.trim().toUpperCase(),
+    apellido: datosFormulario.apellido.trim().toUpperCase(),
+    telefono: datosFormulario.telefono.trim(),
+  });
+  if (errorPerfil) {
+    toast.error("No se pudo guardar el perfil.");
+    return;
+  }
 
-        toast.success('Usuario creado con exito')
-
-        redirigir('/');
-
-        toast.clearWaitingQueue();
-        
-    }
+  toast.success("¡Cuenta creada con éxito!");
+  redirigir("/");
+};
 
 return (
     <div className="relative w-full h-full bg-white p-6 pt-4 rounded-xl shadow-lg">

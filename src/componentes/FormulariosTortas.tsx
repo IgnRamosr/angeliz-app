@@ -5,11 +5,14 @@ import { useNavigate, useLocation  } from "react-router-dom";
 import { toast } from "react-toastify";
 import type {CarritoItem, PropsFormularioTorta, UID} from "../assets/types-interfaces/types"
 import { useCart } from "./useCart";
+import FechaEntregaPicker from "./FechaEntregaPicker";
+import { toLocalISODate } from "../utils/fechas";
 
 export const FormularioTorta = ({id,nombre, tamano_producto,sabor_producto,tipo_formulario, imagenes_producto}: PropsFormularioTorta) => {
 
     const sesion = useUserSession();
 
+    
     const {agregarProductoCarrito, actualizarProductoCarrito} = useCartFunctions();
     const {agregarItem, actualizarItem} = useCart();
 
@@ -24,7 +27,7 @@ export const FormularioTorta = ({id,nombre, tamano_producto,sabor_producto,tipo_
     const [tamano_id, setTamano_id] = useState<number>(tamano_producto[0]?.tamano_id ?? 1);
     const [sabor_id, setSabor_id] = useState<number>(sabor_producto[0]?.sabores.sabor_id ?? 1);
     const [saborNombre, setSaborNombre] = useState<string>(sabor_producto[0]?.sabores.nombre ?? "Chocolate");
-    const [fechaEntrega, setFechaEntrega] = useState<string>("");
+    const [fechaEntrega, setFechaEntrega] = useState<Date | null>(null);
     const [agregaNombreEdad, setagregaNombreEdad] = useState<boolean | undefined>(false);
     const [metodoEnvio, setMetodoEnvio] = useState<string>("Retiro en domicilio");
 
@@ -38,7 +41,7 @@ export const FormularioTorta = ({id,nombre, tamano_producto,sabor_producto,tipo_
         setTamano_id(atributosAcambiar.tamano_id);
         setSabor_id(atributosAcambiar.sabor_id);
         setSaborNombre(atributosAcambiar.sabor_nombre);
-        setFechaEntrega(atributosAcambiar.fecha_entrega);
+        setFechaEntrega(new Date(atributosAcambiar.fecha_entrega));
         setMetodoEnvio(atributosAcambiar.metodo_envio);
         setagregaNombreEdad(!!atributosAcambiar.agregaNombreEdad);
 
@@ -54,6 +57,8 @@ export const FormularioTorta = ({id,nombre, tamano_producto,sabor_producto,tipo_
 
         const imagenURL = imagenes_producto![0]!.url!;
 
+        const fechaStr = fechaEntrega ? toLocalISODate(fechaEntrega) : "";
+
         if(editarItem){
 
             const item = {
@@ -61,7 +66,7 @@ export const FormularioTorta = ({id,nombre, tamano_producto,sabor_producto,tipo_
             user_id: sesion?.user.id,
             nombre_producto: nombre,
             tamano,
-            fecha_entrega: fechaEntrega, 
+            fecha_entrega: fechaStr, 
             sabor_nombre: saborNombre,
             agregaNombreEdad: agregaNombreEdad,
             metodo_envio:metodoEnvio, 
@@ -84,7 +89,7 @@ export const FormularioTorta = ({id,nombre, tamano_producto,sabor_producto,tipo_
                 user_id: sesion?.user.id,
                 nombre_producto: nombre,
                 tamano,
-                fecha_entrega: fechaEntrega, 
+                fecha_entrega: fechaStr, 
                 sabor_nombre: saborNombre,
                 agregaNombreEdad,
                 metodo_envio:metodoEnvio, 
@@ -136,13 +141,7 @@ return (
 
         <div className="space-y-2">
             <label className="block text-sm font-semibold text-gray-700">Fecha de entrega</label>
-            <input 
-                value={fechaEntrega} 
-                type="date" 
-                onChange={e => setFechaEntrega(e.target.value)} 
-                required
-                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent decoration-0 transition-all outline-none"
-            />
+                <FechaEntregaPicker value={fechaEntrega} onChange={setFechaEntrega} minDaysFromToday={1} />
         </div>
 
         <div className="space-y-2">

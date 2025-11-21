@@ -33,9 +33,11 @@ export type Card = {
     imagenURL: string | undefined;
 }
 
+export type Rol = "admin" | "cliente" | null;
+
 export type UID = `${string}-${string}-${string}-${string}-${string}`;
 
-export type LinksProps = {sesion: Session | null, columna: boolean}
+export type LinksProps = {sesion: Session | null, columna: boolean, cerrarAlClickearItem: () => void}
 
 export type PropsFormularioTorta  = Pick<Producto,"id" | "nombre" | "tamano_producto" | "sabor_producto" | "tipo_formulario" | "imagenes_producto">;
 
@@ -52,6 +54,17 @@ export type Tamano = { tamano: number };
 export type Sabor  = { nombre: string };
 
 export type FormularioTorta = {id: number; item_pedido_id: number; tamano: Tamano; sabor_nombre: Sabor; fecha_entrega: string; agregar_nombre_edad: boolean; metodo_envio: string;
+};
+
+
+export type PedidoResumen = {
+  id: number;
+  usuario_id: string | null;
+  fecha_solicitud: string | null;  // ISO
+  creado_en: string | null;        // ISO (si la agregaste)
+  contacto_nombre: string | null;
+  contacto_apellido: string | null;
+  contacto_telefono: string | null;
 };
 
 

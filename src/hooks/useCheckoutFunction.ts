@@ -4,7 +4,7 @@ import { supabase } from "../supabase/supabaseClient"
 
 
 
-const obtenerUsuario = async () => {
+export const obtenerUsuario = async () => {
     const {data, error} = await supabase.auth.getUser();
     if(error||!data.user){
         console.error("No hay usuario autenticado");
@@ -36,9 +36,9 @@ const guardarContacto = async (userId: string| undefined, c: datosFormContacto) 
         user_id: userId,
     };
 
-    const { error } = await supabase.from("contacto").insert(fila);
+    const { data, error } = await supabase.from("contacto").insert(fila).select("id").single();
     if (error) throw new Error(`Error guardando contacto: ${error.message}`);
-    return error;
+    return data.id;
 };
 
     const promoverCuentaAnonima = async (correo: string, password: string) => {
@@ -52,10 +52,10 @@ const guardarContacto = async (userId: string| undefined, c: datosFormContacto) 
 };
 
 
-const insertarPedido = async (usuarioId: string | undefined) => {
+const insertarPedido = async (usuarioId: string | undefined, contactoId: number | null) => {
     const {data, error} = await supabase
     .from("pedidos")
-    .insert({usuario_id: usuarioId, fecha_solicitud: new Date().toISOString()})
+    .insert({usuario_id: usuarioId, fecha_solicitud: new Date().toISOString(), contacto_id:contactoId})
     .select("id").single();
 
     if(error){
@@ -96,25 +96,40 @@ const insertarFormulario = async (itemsCarrito: CarritoItem[], idsItemsPedido: n
     }
 }
 
+async function asegurarPerfil(userId: string | undefined) {
+
+    const { error } = await supabase
+    .from("profiles")
+    .upsert({ id: userId }, { onConflict: "id" });
+    if (error) throw new Error(`No se pudo asegurar perfil: ${error.message}, ${error.details}`);
+}
+
+
 export async function generaSolicitud (itemsCarrito: CarritoItem[], contacto?: datosFormContacto) {
-    
 
     const usuarioID = await obtenerUsuario();
 
+    let contactoId: number | null = null;
+
         if (await esAnonimo()) {
+            await asegurarPerfil(usuarioID);
         if (contacto) {
-        await guardarContacto(usuarioID, contacto);
+        contactoId = await guardarContacto(usuarioID, contacto);
         if (contacto.crearCuenta) {
             await promoverCuentaAnonima(contacto.email!, contacto.password!);
         }
         }
     }
 
-    const pedidoID = await insertarPedido(usuarioID);
+    const pedidoID = await insertarPedido(usuarioID,contactoId);
 
     const idsItems = await insertarItemsPedido(pedidoID, itemsCarrito);
 
     await insertarFormulario(itemsCarrito, idsItems);
+
+    supabase.functions.invoke("notificar-telegram", {
+    body: { pedidoId: pedidoID },
+    }).catch((e) => console.warn("No se pudo notificar por Telegram:", e?.message));
 
     return pedidoID;
 }

@@ -1,11 +1,14 @@
 import { Link } from "react-router-dom";
 import { useAutenticacion } from "../hooks/useAuth";
 import type {LinksProps} from "../assets/types-interfaces/types"
+import { useUserRole } from "../hooks/useUserProfile";
 import { useEffect, useRef, useState } from "react";
 
 
 
-export const LinksBarraNavegacion = ({ sesion, columna }: LinksProps) => {
+export const LinksBarraNavegacion = ({ sesion, columna, cerrarAlClickearItem}: LinksProps) => {
+
+    const {esAdmin} = useUserRole();
 
     const {cerrarSesion} = useAutenticacion();
     const [abierto, setAbierto] = useState(false);
@@ -24,27 +27,43 @@ export const LinksBarraNavegacion = ({ sesion, columna }: LinksProps) => {
     const contCls = `flex ${columna ? "flex-col" : "flex-row"} list-none max-sm:gap-10 max-sm:mt-10 max-sm:ml-5 sm:gap-10 sm:mt-20 sm:ml-5 lg:mt-0 lg:gap-8 xl:gap-12`;
     const linkCls = "text-[#6F2521] font-medium hover:text-[#C9A742] transition-colors";
 
+
     return (
     <div className="">
-        {!validarUsuario &&(
+
+        {!validarUsuario && esAdmin &&(
         <div className={`flex ${columna ? 'flex-col' : 'flex-row'} list-none max-sm:gap-10 max-sm:mt-10 max-sm:ml-5 sm:gap-10 sm:mt-20 sm:ml-5 lg:mt-0 lg:gap-8 xl:gap-12`}>
-            <li className="text-[#6F2521] font-medium hover:text-[#C9A742] transition-colors">
+            <li onClick={cerrarAlClickearItem} className="text-[#6F2521] font-medium hover:text-[#C9A742] transition-colors">
                 <Link to={'/'}>Productos</Link>
             </li>
             <li className="text-[#6F2521] font-medium hover:text-[#C9A742] transition-colors">
-                <Link to={'pedidos'}>Mis pedidos</Link>
+                <Link onClick={cerrarAlClickearItem} to={esAdmin ? '/admin' : '/pedidos'}>{esAdmin ? 'Administrar' : 'Mis pedidos'}</Link>
             </li>
             <li>
                 <button onClick={cerrarSesion} className="hover:cursor-pointer text-[#6F2521] font-medium hover:text-[#C9A742] transition-colors">Cerrar sesión</button>
             </li>
         </div>
         )}
-        {validarUsuario &&(
+
+        {!validarUsuario && !esAdmin &&(
+        <div className={`flex ${columna ? 'flex-col' : 'flex-row'} list-none max-sm:gap-10 max-sm:mt-10 max-sm:ml-5 sm:gap-10 sm:mt-20 sm:ml-5 lg:mt-0 lg:gap-8 xl:gap-12`}>
+            <li onClick={cerrarAlClickearItem} className="text-[#6F2521] font-medium hover:text-[#C9A742] transition-colors">
+                <Link to={'/'}>Productos</Link>
+            </li>
+            <li className="text-[#6F2521] font-medium hover:text-[#C9A742] transition-colors">
+                <Link onClick={cerrarAlClickearItem} to={'pedidos'}>Mis pedidos</Link>
+            </li>
+            <li>
+                <button onClick={cerrarSesion} className="hover:cursor-pointer text-[#6F2521] font-medium hover:text-[#C9A742] transition-colors">Cerrar sesión</button>
+            </li>
+        </div>
+        )}
+        {validarUsuario && !esAdmin &&(
         <div className={`flex ${columna ? 'flex-col' : 'flex-row'} list-none max-sm:gap-10 max-sm:mt-10 max-sm:ml-5 sm:gap-10 sm:mt-20 sm:ml-5 lg:mt-0 lg:gap-8 xl:gap-12`}>
 
             <ul className={contCls}>
-            <li className={linkCls}><Link to="/">Productos</Link></li>
-            <li className={linkCls}><Link to="/pedidos">Mis pedidos</Link></li>
+            <li className={linkCls}><Link to="/" onClick={cerrarAlClickearItem} >Productos</Link></li>
+            <li className={linkCls}><Link to="/pedidos" onClick={cerrarAlClickearItem} >Mis pedidos</Link></li>
 
             {/* Dropdown de "Ingresar" con hover + click */}
             <li ref={caja} className="relative group">
