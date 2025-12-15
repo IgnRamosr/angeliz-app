@@ -43,7 +43,6 @@ export const obtenerDisponibilidad = async (año: number, mes0: number) => {
 
     const nuevo = !(data?.bloqueado ?? false); // si no existe, lo creamos DESBLOQUEADO (invirtiendo true)
 
-    console.log(usuarioId);
 
     // upsert sobre PK (fecha)
     const { error: error2 } = await supabase
