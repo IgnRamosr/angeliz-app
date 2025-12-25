@@ -1,4 +1,5 @@
-// src/hooks/usePedidosAdmin.ts
+// Función para traer todos los pedidos al administrador
+
 import { useEffect, useState } from "react";
 import { listarPedidosResumenAdmin } from "../hooks/useOrders"; // o donde lo tengas
 import type { PedidoResumen } from "../assets/types-interfaces/types";

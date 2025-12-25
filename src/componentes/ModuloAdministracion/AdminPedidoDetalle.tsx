@@ -1,7 +1,7 @@
 // pages/AdminPedidoDetalle.tsx
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
-import { obtenerPedidoDetalleAdmin } from "../hooks/useOrders";
+import { obtenerPedidoDetalleAdmin } from "../../hooks/useOrders";
 import {
   ArrowLeft,
   Loader2,
@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 
 // ⬇️ Reutilizamos tus utilidades
-import { buildWhatsAppHrefFromPedido, openWhatsApp } from "../utils/whatsapp";
+import { buildWhatsAppHrefFromPedido, openWhatsApp } from "../../utils/whatsapp";
 
 export default function AdminPedidoDetalle() {
   const { id } = useParams();

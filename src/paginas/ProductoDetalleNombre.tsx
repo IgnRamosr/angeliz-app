@@ -2,7 +2,7 @@
     import { useEffect } from "react";
     import { useParams } from "react-router-dom";
     import { useProductSearch } from "../hooks/useProducts";
-    import { CardProducto } from "../componentes/CardProducto"; // tu card
+    import { CardProducto } from "../componentes/ModuloCliente/CardProducto"; // tu card
 
     export default function BuscarProductos() {
     const {nombre} = useParams();

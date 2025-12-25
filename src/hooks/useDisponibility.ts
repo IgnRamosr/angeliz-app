@@ -1,4 +1,6 @@
 
+//Funciones para interactuar con la disponibilidad(Solo lo puede hacer el administrador)
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../supabase/supabaseClient";
 import { toKey, ymd } from "../utils/fechas";

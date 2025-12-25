@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom"
-import type {Card} from "../assets/types-interfaces/types"
+import type {Card} from "../../assets/types-interfaces/types"
 
 
 

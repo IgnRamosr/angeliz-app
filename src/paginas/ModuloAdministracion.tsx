@@ -1,13 +1,14 @@
 // src/pages/ModuloAdministracion.tsx
 import { Navigate } from "react-router-dom";
 import { useUserRole } from "../hooks/useUserProfile";
-import CalendarioDisponibilidad from "../componentes/CalendarioDisponibilidad";
-import PedidosAdminTabla from "../componentes/PedidosAdminTabla";
+import CalendarioDisponibilidad from "../componentes/ModuloAdministracion/CalendarioDisponibilidad";
+import PedidosAdminTabla from "../componentes/ModuloAdministracion/PedidosAdminTabla";
 import { Loader2, ShoppingBag, Calendar, LayoutDashboard } from "lucide-react";
 import { useState } from "react";
+import { useUserRoleContext } from "../componentes/ModuloAdministracion/useUserRoleContext";
 
 export default function AdminApp() {
-  const { esAdmin, cargando } = useUserRole();
+  const { esAdmin, cargando } = useUserRoleContext();
   const [tabActiva, setTabActiva] = useState<"pedidos" | "disponibilidad">("pedidos");
 
   if (cargando) {

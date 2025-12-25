@@ -2,7 +2,7 @@
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 import { useMemo } from "react";
-import { useDiasBloqueados } from "../hooks/useDisponibility";
+import { useDiasBloqueados } from "../../hooks/useDisponibility";
 import type { Era, FormatLongFnOptions, LocaleDayPeriod, LocalizeFnOptions, Quarter } from "date-fns";
 
 type Props = {

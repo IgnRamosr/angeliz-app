@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom"
 import { useProduct } from "../hooks/useProducts";
-import { FormularioTorta } from "../componentes/FormulariosTortas";
+import { FormularioTorta } from "../componentes/ModuloCliente/FormulariosTortas";
 
 export const ProductoDetalle = () => {
     const {id} = useParams();

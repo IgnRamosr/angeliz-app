@@ -1,3 +1,6 @@
+//Funciones para traer los pedidos y detalle de pedidos de los usuarios
+
+
 import type { PedidoConItems } from "../assets/types-interfaces/types";
 import { supabase } from "../supabase/supabaseClient";
 

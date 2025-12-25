@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { LinksBarraNavegacion } from "./LinksBarraNavegacion";
-import useUserSession from "../hooks/useUserSession";
-import type {PropsBarraLateral} from "../assets/types-interfaces/interfaces"
+import { LinksBarraNavegacion } from "../Navegacion/LinksBarraNavegacion";
+import useUserSession from "../../hooks/useUserSession";
+import type {PropsBarraLateral} from "../../assets/types-interfaces/interfaces"
 
 
 

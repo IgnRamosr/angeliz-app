@@ -1,5 +1,5 @@
 import PhoneInput from 'react-phone-input-2'
-import type {InputCampoTelefono} from "../assets/types-interfaces/types"
+import type {InputCampoTelefono} from "../../assets/types-interfaces/types"
 
 
 const estiloPorDefecto = "bg-[#FDDEE8] border outline-none border-gray-300 text-sm rounded-full block w-full p-2.5 focus:ring-[#C9A742] focus:border-[#C9A742]"

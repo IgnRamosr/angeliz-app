@@ -1,3 +1,6 @@
+//Funciones para traer los productos
+
+
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../supabase/supabaseClient";
 import type {Producto} from "../assets/types-interfaces/interfaces"

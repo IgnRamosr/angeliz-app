@@ -1,5 +1,5 @@
 import { toast } from "react-toastify";
-import { FormularioRegistro } from "../componentes/FormularioRegistro"
+import { FormularioRegistro } from "../componentes/ModuloRegistro/FormularioRegistro"
 const background = new URL('../assets/imagenes/bg-registro3.jpg', import.meta.url).href;
 
 toast.clearWaitingQueue();

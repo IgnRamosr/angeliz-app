@@ -1,4 +1,4 @@
-import { FormularioLogin } from "../componentes/FormularioLogin";
+import { FormularioLogin } from "../componentes/ModuloInicioSesion/FormularioLogin";
 const background = new URL('../assets/imagenes/bg5.jpg', import.meta.url).href;
 
 export const Login = () => (

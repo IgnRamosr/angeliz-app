@@ -1,12 +1,12 @@
     import { useEffect, useMemo, useState } from "react";
-    import { useCartFunctions } from "../hooks/useCartFunctions";
-    import useUserSession from "../hooks/useUserSession";
+    import { useCartFunctions } from "../../hooks/useCartFunctions";
+    import useUserSession from "../../hooks/useUserSession";
     import { useNavigate, useLocation } from "react-router-dom";
     import { toast } from "react-toastify";
-    import type { CarritoItem, PropsFormularioTorta, UID } from "../assets/types-interfaces/types";
-    import { useCart } from "./useCart";
+    import type { CarritoItem, PropsFormularioTorta, UID } from "../../assets/types-interfaces/types";
+    import { useCart } from "../Navegacion/useCart";
     import FechaEntregaPicker from "./FechaEntregaPicker";
-    import { toLocalISODate } from "../utils/fechas";
+    import { toLocalISODate } from "../../utils/fechas";
 
     export const FormularioTorta = ({
     id,

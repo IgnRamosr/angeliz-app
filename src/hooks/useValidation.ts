@@ -1,3 +1,5 @@
+//Funciones para hacer validaciones en formularios
+
 import { useState } from "react";
 import type {Validaciones} from "../assets/types-interfaces/types"
 

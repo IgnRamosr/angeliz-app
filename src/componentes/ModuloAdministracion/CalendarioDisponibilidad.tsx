@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import { addMonths, buildCalendarGrid, isPast, isToday, startOfMonth, ymd } from "../utils/fechas";
-import { obtenerDisponibilidad, cambiarEstadoDia } from "../hooks/useDisponibility";
+import { addMonths, buildCalendarGrid, isPast, isToday, startOfMonth, ymd } from "../../utils/fechas";
+import { obtenerDisponibilidad, cambiarEstadoDia } from "../../hooks/useDisponibility";
 import { ChevronLeft, ChevronRight, CalendarDays, CheckCircle2, XCircle, AlertCircle, Loader2 } from "lucide-react";
 
 const WEEKDAYS = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];

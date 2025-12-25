@@ -1,6 +1,6 @@
 import { useProductosPorSubcategoria } from "../hooks/useProducts";
-import CarruselHorizontal from "../componentes/Carrusel";
-import { CardProducto } from "../componentes/CardProducto";
+import CarruselHorizontal from "../componentes/ModuloCliente/Carrusel";
+import { CardProducto } from "../componentes/ModuloCliente/CardProducto";
 import { Loader2, AlertCircle, Sparkles } from "lucide-react";
 
 export default function SeccionesPorSubcategoria() {

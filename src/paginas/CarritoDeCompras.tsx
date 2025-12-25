@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import {useCartFunctions} from "../hooks/useCartFunctions"
 import type { CarritoItem, UID } from "../assets/types-interfaces/types";
 import { useNavigate } from "react-router-dom";
-import { useCart } from "../componentes/useCart";
+import { useCart } from "../componentes/Navegacion/useCart";
 import { generaSolicitud } from "../hooks/useCheckoutFunction";
 import { toast } from "react-toastify";
 import { Cake, Calendar, Edit3, ShoppingBag, Trash2, Users, Stars } from "lucide-react";
 import { useRef } from "react";
-import  FormularioContacto, {type FormularioContactoRef}  from "../componentes/FormularioContacto";
+import  FormularioContacto, {type FormularioContactoRef}  from "../componentes/ModuloCliente/FormularioContacto";
 import { supabase } from "../supabase/supabaseClient";
 import type { datosFormContacto } from '../assets/types-interfaces/interfaces';
 

@@ -1,3 +1,5 @@
+//FUNCIONES PARA EL REGISTRO / AUTENTICACIÓN DEL USUARIO
+
 import { supabase } from "../supabase/supabaseClient";
 import type { ParametrosAutenticacion } from "../assets/types-interfaces/interfaces";
 

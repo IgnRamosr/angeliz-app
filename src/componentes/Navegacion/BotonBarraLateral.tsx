@@ -1,5 +1,5 @@
 import { Menu, X } from "lucide-react";
-import type {PropsBotonBarraLat} from "../assets/types-interfaces/interfaces"
+import type {PropsBotonBarraLat} from "../../assets/types-interfaces/interfaces"
 
 
 

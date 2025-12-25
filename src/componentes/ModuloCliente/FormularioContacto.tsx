@@ -1,6 +1,6 @@
     import { useState, type ChangeEvent, useImperativeHandle, forwardRef } from 'react';
     import { User, Mail, Phone, Lock, UserPlus } from 'lucide-react';
-    import type { datosFormContacto } from '../assets/types-interfaces/interfaces';
+    import type { datosFormContacto } from '../../assets/types-interfaces/interfaces';
 
     interface FormErrors {
     [key: string]: string;

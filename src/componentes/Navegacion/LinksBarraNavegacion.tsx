@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
-import { useAutenticacion } from "../hooks/useAuth";
-import type {LinksProps} from "../assets/types-interfaces/types"
-import { useUserRole } from "../hooks/useUserProfile";
+import { useAutenticacion } from "../../hooks/useAuth";
+import type {LinksProps} from "../../assets/types-interfaces/types"
+import { useUserRole } from "../../hooks/useUserProfile";
 import { useEffect, useRef, useState } from "react";
 
 

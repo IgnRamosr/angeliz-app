@@ -11,8 +11,8 @@ import { AgradecimientoPostCompra } from '../../paginas/SolicitudExitosa';
 import ProductoDetalleNombre from '../../paginas/ProductoDetalleNombre';
 import SeccionesPorSubcategoria from '../../paginas/SeccionesPorSubcategoria';
 import ModuloAdministracion from '../../paginas/ModuloAdministracion';
-import AdminPedidoDetalle from '../../componentes/AdminPedidoDetalle';
-import RequiereAdmin from '../../componentes/RequiereAdmin';
+import AdminPedidoDetalle from '../../componentes/ModuloAdministracion/AdminPedidoDetalle';
+import RequiereAdmin from '../../componentes/ModuloAdministracion/RequiereAdmin';
 
 
 
@@ -36,8 +36,8 @@ return (
 
 
             {/* Módulo admin y detalle */}
-            <Route path="admin" element={<RequiereAdmin><ModuloAdministracion /></RequiereAdmin>} />
-            <Route path="admin/pedido/:id" element={<RequiereAdmin><AdminPedidoDetalle /></RequiereAdmin>} />
+            <Route path="admin" element={<ModuloAdministracion />} />
+            <Route path="admin/pedido/:id" element={<AdminPedidoDetalle />} />
 
             {/* ÚNICO comodín dentro del layout */}
             <Route path="*" element={<NoEncontrado />} />

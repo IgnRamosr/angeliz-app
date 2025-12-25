@@ -1,12 +1,12 @@
 import { useState } from "react";
-import useUserSession from "../hooks/useUserSession"
+import useUserSession from "../../hooks/useUserSession"
 import { BarraLateral } from "./BarraLateral";
-import { BotonBarraLateral } from "./BotonBarraLateral";
-import { BotonCarritoDeCompras } from "./BotonCarrito";
-import { LinksBarraNavegacion } from "./LinksBarraNavegacion";
+import { BotonBarraLateral } from "../Navegacion/BotonBarraLateral";
+import { BotonCarritoDeCompras } from "../Navegacion/BotonCarrito";
+import { LinksBarraNavegacion } from "../Navegacion/LinksBarraNavegacion";
 import { InputsBusqueda, InputsBusquedaMovil } from "./InputsBusqueda";
 import { useNavigate } from "react-router-dom";
-const logo = new URL('../assets/imagenes/logo.png', import.meta.url).href
+const logo = new URL('../../assets/imagenes/logo.png', import.meta.url).href
 
 export const BarraNavegacion = () => {
 
@@ -23,7 +23,9 @@ return (
     <header className="bg-[#fff0f5] max-sm:h-40 sm:h-40  lg:h-26 w-full  flex flex-wrap items-center ">
       {/*LINKS DE NAVEGACIÓN*/}
       <nav className="max-sm:hidden sm:hidden lg:flex lg:flex-1 lg:justify-start lg:ml-8 xl:ml-16 lg:text-sm xl:text-lg">
-        <LinksBarraNavegacion sesion={sesion} columna={false} />
+        <LinksBarraNavegacion sesion={sesion} columna={false} cerrarAlClickearItem={function (): void {
+        throw new Error("Function not implemented.");
+      } } />
       </nav>
 
       {/*BOTÓN BARRA LATERAL*/}

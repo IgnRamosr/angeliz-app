@@ -1,3 +1,5 @@
+//Funciones para interactuar con el carrito
+
 import type { CarritoItem } from "../assets/types-interfaces/types";
 import type { datosFormContacto } from '../assets/types-interfaces/interfaces';
 import { supabase } from "../supabase/supabaseClient"

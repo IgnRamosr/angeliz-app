@@ -1,8 +1,8 @@
 import {createContext, useContext, useEffect, useReducer, type ReactNode} from "react";
 
-import type {FuncionesCarrito} from "../assets/types-interfaces/interfaces"
-import type {EstadoCarrito} from "../assets/types-interfaces/interfaces"
-import type {CarritoItem} from "../assets/types-interfaces/types"
+import type {FuncionesCarrito} from "../../assets/types-interfaces/interfaces"
+import type {EstadoCarrito} from "../../assets/types-interfaces/interfaces"
+import type {CarritoItem} from "../../assets/types-interfaces/types"
 
 const CarritoGlobal = createContext<FuncionesCarrito>({} as FuncionesCarrito);
 

@@ -1,4 +1,4 @@
-import { CardProducto } from "../componentes/CardProducto";
+import { CardProducto } from "../componentes/ModuloCliente/CardProducto";
 // import { Separador } from "../componentes/Separador";
 // import { Titulo } from "../componentes/Titulo";
 import { useProducts } from "../hooks/useProducts"

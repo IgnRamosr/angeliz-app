@@ -1,3 +1,6 @@
+//Función para traer la sesión actual del usuario
+
+
 import { useState, useEffect } from "react";
 import { supabase } from "../supabase/supabaseClient";
 import type { Session } from "@supabase/supabase-js";

@@ -1,19 +1,19 @@
 import { Link, useNavigate } from "react-router-dom"
-import { CampoInput } from "./CampoInput"
+import { CampoInput } from "../Otros/CampoInput"
 import { useState } from "react"
 import { toast } from "react-toastify"
-const logo = new URL('../assets/imagenes/logo.png', import.meta.url).href
+const logo = new URL('../../assets/imagenes/logo.png', import.meta.url).href
 
 
-import {useAutenticacion} from '../hooks/useAuth'
-import {useUserProfile} from '../hooks/useUserProfile'
+import {useAutenticacion} from '../../hooks/useAuth'
+import {useUserProfile} from '../../hooks/useUserProfile'
 const { registrarse, promoverAnonimo } = useAutenticacion()
 const { crearOActualizarPerfil } = useUserProfile()
 
 
-import { useValidation } from "../hooks/useValidation"
-import { InputTelefono } from "./InputTelefono"
-import { supabase } from "../supabase/supabaseClient"
+import { useValidation } from "../../hooks/useValidation"
+import { InputTelefono } from "../ModuloRegistro/InputTelefono"
+import { supabase } from "../../supabase/supabaseClient"
 
 
 

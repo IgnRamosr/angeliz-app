@@ -1,6 +1,6 @@
 import { LucideShoppingBag} from "lucide-react";
 import { Link } from "react-router-dom";
-import { useCart } from "./useCart";
+import { useCart } from "../Navegacion/useCart";
 
 
 export const BotonCarritoDeCompras = () => {

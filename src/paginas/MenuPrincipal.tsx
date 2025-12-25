@@ -1,5 +1,5 @@
 import { Outlet } from "react-router-dom"
-import { BarraNavegacion } from "../componentes/BarraNavegacion"
+import { BarraNavegacion } from "../componentes/Navegacion/BarraNavegacion"
 // import { PiePagina } from "../componentes/PiePagina"
 
 export const MenuPrincipal = () => {

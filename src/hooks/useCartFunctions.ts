@@ -1,3 +1,6 @@
+//FUNCIONES
+
+
 import useUserSession from "./useUserSession";
 import { supabase } from "../supabase/supabaseClient";
 import type {CarritoItem, UID} from "../assets/types-interfaces/types"

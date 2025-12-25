@@ -1,10 +1,10 @@
 import { Link, useNavigate } from "react-router-dom"
-import { useAutenticacion } from "../hooks/useAuth"
-import { CampoInput } from "./CampoInput"
+import { useAutenticacion } from "../../hooks/useAuth"
+import { CampoInput } from "../Otros/CampoInput"
 import { useState } from "react"
 const { iniciarSesion } = useAutenticacion()
-const logo = new URL('../assets/imagenes/logo.png', import.meta.url).href
-import { useValidation } from "../hooks/useValidation"
+const logo = new URL('../../assets/imagenes/logo.png', import.meta.url).href
+import { useValidation } from "../../hooks/useValidation"
 import { toast } from "react-toastify"
 
 
