@@ -4,7 +4,7 @@
 import { supabase } from "../supabase/supabaseClient"
 import type {ProfileData} from "../assets/types-interfaces/interfaces"
 import type { Rol } from "../assets/types-interfaces/types"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 
 // useUserProfile.ts
 export const useUserProfile = () => {
@@ -27,7 +27,6 @@ export const useUserRole = () => {
 
     const [rol, setRol] = useState<Rol>(null);
     const [cargando, setCargando] = useState(true);
-    const yaConsultado = useRef(false);
 
 
     useEffect(() => {

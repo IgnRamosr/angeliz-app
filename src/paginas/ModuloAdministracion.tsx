@@ -1,6 +1,5 @@
 // src/pages/ModuloAdministracion.tsx
 import { Navigate } from "react-router-dom";
-import { useUserRole } from "../hooks/useUserProfile";
 import CalendarioDisponibilidad from "../componentes/ModuloAdministracion/CalendarioDisponibilidad";
 import PedidosAdminTabla from "../componentes/ModuloAdministracion/PedidosAdminTabla";
 import { Loader2, ShoppingBag, Calendar, LayoutDashboard } from "lucide-react";
