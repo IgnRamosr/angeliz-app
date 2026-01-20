@@ -8,20 +8,15 @@
     import FechaEntregaPicker from "./FechaEntregaPicker";
     import { toLocalISODate } from "../../utils/fechas";
 
-    export const FormularioTorta = ({
-    id,
-    nombre,
-    tamano_producto,
-    sabor_producto,
-    tipo_formulario,
-    imagenes_producto
-    }: PropsFormularioTorta) => {
+    export const FormularioTorta = ({id, nombre, tamano_producto, sabor_producto, tipo_formulario, imagenes_producto }: PropsFormularioTorta) => {
+
     const sesion = useUserSession();
 
     const { agregarProductoCarrito, actualizarProductoCarrito } = useCartFunctions();
     const { agregarItem, actualizarItem } = useCart();
 
     const redirigir = useNavigate();
+
     const { search, state } = useLocation();
 
     const editarItem = new URLSearchParams(search).get("editar");
@@ -32,14 +27,15 @@
     const [tamano_id, setTamano_id] = useState<number>(tamano_producto[0]?.tamano_id ?? 1);
     const [sabor_id, setSabor_id] = useState<number>(sabor_producto[0]?.sabores.sabor_id ?? 1);
     const [saborNombre, setSaborNombre] = useState<string>(sabor_producto[0]?.sabores.nombre ?? "Chocolate");
+    const [, setImagenReferencia] = useState<File | null>();
     const [fechaEntrega, setFechaEntrega] = useState<Date | null>(null);
     const [agregaNombreEdad, setagregaNombreEdad] = useState<boolean>(false);
     const [metodoEnvio, setMetodoEnvio] = useState<string>("Retiro en domicilio");
-
     const [esconder, setEsconder] = useState<boolean>(false);
 
     useEffect(() => {
         if (!atributosAcambiar) return;
+
         setUid(atributosAcambiar.uid);
         setTamano(atributosAcambiar.tamano);
         setTamano_id(atributosAcambiar.tamano_id);
@@ -48,8 +44,10 @@
         setFechaEntrega(new Date(atributosAcambiar.fecha_entrega));
         setMetodoEnvio(atributosAcambiar.metodo_envio);
         setagregaNombreEdad(!!atributosAcambiar.agregaNombreEdad);
+
     }, [atributosAcambiar]);
 
+    {/* Función para validar si el formulario está completo */}
     const isFormComplete = useMemo(() => {
         const tieneTamano = Number.isFinite(tamano_id) && tamano_id > 0;
         const tieneSabor = Number.isFinite(sabor_id) && sabor_id > 0;
@@ -73,6 +71,8 @@
         const imagenURL = imagenes_producto?.[0]?.url ?? "";
         const fechaStr = fechaEntrega ? toLocalISODate(fechaEntrega) : "";
 
+        {/* Sí editamos al item se asigna los valores previamente capturados*/}
+
         if (editarItem) {
         const item = {
             uid,
@@ -95,7 +95,11 @@
         toast.clearWaitingQueue();
         toast.info("¡Producto actualizado con éxito!");
         redirigir("/carrito");
-        } else {
+        } 
+
+        // Si no editamos, o sea agregamos se crea el campo nuevouid con crypto
+
+        else {
         const nuevoUid = crypto.randomUUID?.();
         const item = {
             uid: nuevoUid,
@@ -136,12 +140,47 @@
         setTamano(obj!.tamano);
     };
 
+    const validarImagen = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+        const validarTipoYtamaño = (archivo: File) =>{
+
+            const tiposImagenPermitidas = ['image/jpeg', 'image/png', 'image/webp'];
+            if(!tiposImagenPermitidas.includes(archivo.type)){
+                return toast.error('Tipo de imagen no permitida');
+            }
+
+            const tamañoMaximoImagen = 2;
+            if (archivo.size > tamañoMaximoImagen * 1024 * 1024){
+                return toast.error('El tamaño de imagen supera a los 2MB');
+            }
+
+            return null;
+        }
+
+        const archivo = e.target.files?.[0];
+
+        if(!archivo) return;
+
+        const error = validarTipoYtamaño(archivo);
+
+        if(error){
+            toast.error(error);
+            e.target.value = '';
+            return;
+        }
+
+        setImagenReferencia(archivo);
+
+    };
+
     return (
         <form
         onSubmit={enviarFormulario}
         className="bg-white rounded-2xl shadow-lg p-6 md:p-8 space-y-6 max-w-2xl mx-auto"
         >
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Personaliza tu pedido</h2>
+
+        {/* Campo cantidad de personas */}
 
         <div className="space-y-2">
             <label className="block text-sm font-semibold text-gray-700">Cantidad de personas</label>
@@ -159,10 +198,14 @@
             </select>
         </div>
 
+        {/* Campo fecha entrega */}
+
         <div className="space-y-2">
             <label className="block text-sm font-semibold text-gray-700">Fecha de entrega</label>
             <FechaEntregaPicker value={fechaEntrega} onChange={setFechaEntrega} minDaysFromToday={1} />
         </div>
+
+        {/* Campo sabor */}
 
         <div className="space-y-2">
             <label className="block text-sm font-semibold text-gray-700">Sabor</label>
@@ -179,6 +222,21 @@
             ))}
             </select>
         </div>
+
+        {/* Campo imagen de referencia (Solo aparece si el título de la torta tiene "crea") */}
+
+        {nombre.toLocaleLowerCase().includes('crea') && (
+            <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">Imagen de referencia</label>
+            <input type="file"
+            accept=".jpg, .png, jepg" 
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none" 
+            onChange={validarImagen}/>
+        </div>
+        )}
+
+
+        {/* Campo desea agregar nombre y/o edad */}
 
         <div className="space-y-3">
             <label className="block text-sm font-semibold text-gray-700">¿Desea agregar nombre y/o edad?</label>
@@ -206,6 +264,8 @@
             </div>
         </div>
 
+        {/* Campo método de envío */}
+
         <div className="space-y-2">
             <label className="block text-sm font-semibold text-gray-700">Método de envío</label>
             <select
@@ -222,6 +282,8 @@
             </select>
         </div>
 
+        {/* Botón agregar al carrito / actualizar producto */}
+
         <button
             type="submit"
             disabled={esconder || !isFormComplete}
@@ -231,6 +293,7 @@
         >
             {esconder ? "Agregando..." : (editarItem ? "Actualizar producto" : "Agregar al carrito")}
         </button>
+
         </form>
     );
     };

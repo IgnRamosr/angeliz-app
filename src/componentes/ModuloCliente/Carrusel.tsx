@@ -131,8 +131,7 @@ export default function CarruselHorizontal({ children, className }: Props) {
       >
         {/* Contenido duplicado x3 para scroll infinito */}
         {children}
-        {children}
-        {children}
+
       </div>
 
       {/* Botón Siguiente */}
@@ -198,7 +197,6 @@ function Demo() {
           </h1>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">
             Explora nuestras deliciosas tortas. Arrastra con el mouse o usa las flechas. 
-            <span className="hidden sm:inline"> El carrusel es infinito.</span>
           </p>
         </div>
         
@@ -238,29 +236,6 @@ function Demo() {
             </div>
           ))}
         </CarruselHorizontal>
-
-        {/* Instrucciones */}
-        <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm text-gray-500">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-              <span className="text-lg">👆</span>
-            </div>
-            <span className="hidden sm:inline">Arrastra para navegar</span>
-            <span className="sm:hidden">Desliza para navegar</span>
-          </div>
-          <div className="hidden sm:flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-              <span className="text-lg">⬅️➡️</span>
-            </div>
-            <span>Usa las flechas</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-              <span className="text-lg">🔄</span>
-            </div>
-            <span>Carrusel infinito</span>
-          </div>
-        </div>
       </div>
     </div>
   );

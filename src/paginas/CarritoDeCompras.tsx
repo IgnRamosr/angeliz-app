@@ -54,15 +54,15 @@ export const CarritoDeCompras = () => {
 
   useEffect(() => {
     (async () => {
-      try {
-        const sesion = await supabase.auth.getUser();
-        setSession(sesion.data.user?.is_anonymous);
-        const item = await listarProductosCarrito();
-        setItems(item);
+        try {
+          const sesion = await supabase.auth.getUser();
+          setSession(sesion.data.user?.is_anonymous);
+          const item = await listarProductosCarrito();
+          setItems(item);
       } catch (e) {
-        console.error(e);
+          console.error(e);
       } finally {
-        setLoading(false);
+          setLoading(false);
       }
     })();
   }, []);

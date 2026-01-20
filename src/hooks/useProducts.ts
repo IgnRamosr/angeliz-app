@@ -4,6 +4,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../supabase/supabaseClient";
 import type {Producto} from "../assets/types-interfaces/interfaces"
+import type { Grupo } from "../assets/types-interfaces/types";
 
 
 //Buscar productos
@@ -95,11 +96,6 @@ export const useProductSearch = () => {
 }
 
 
-
-type Subcategoria = { id: number; nombre: string };
-
-type Grupo = { subcategoria: Subcategoria; productos: Producto[] };
-
 export function useProductosPorSubcategoria(limitPorSubcat = 12) {
 const [grupos, setGrupos] = useState<Grupo[]>([]);
 const [cargando, setCargando] = useState(true);
@@ -112,7 +108,7 @@ useEffect(() => {
     // 1) Traer subcategorías visibles/ordenadas (ajusta según tu esquema)
     const { data: subcats, error: e1 } = await supabase
     .from("subcategorias")
-    .select("id, nombre")
+    .select("id, nombre, visible")
     .order("nombre", { ascending: true });
 
     if (e1) { setError(e1.message); setCargando(false); return; }

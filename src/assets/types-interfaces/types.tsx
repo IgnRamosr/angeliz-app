@@ -58,13 +58,17 @@ export type FormularioTorta = {id: number; item_pedido_id: number; tamano: Taman
 
 
 export type PedidoResumen = {
-  id: number;
-  usuario_id: string | null;
-  fecha_solicitud: string | null;  // ISO
-  creado_en: string | null;        // ISO (si la agregaste)
-  contacto_nombre: string | null;
-  contacto_apellido: string | null;
-  contacto_telefono: string | null;
+id: number;
+usuario_id: string | null;
+fecha_solicitud: string | null;  // ISO
+creado_en: string | null;        // ISO (si la agregaste)
+contacto_nombre: string | null;
+contacto_apellido: string | null;
+contacto_telefono: string | null;
 };
+
+export type Subcategoria = { id: number; nombre: string, visible: boolean };
+
+export type Grupo = { subcategoria: Subcategoria; productos: Producto[] };
 
 

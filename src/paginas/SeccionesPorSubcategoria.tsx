@@ -6,6 +6,7 @@ import { Loader2, AlertCircle, Sparkles } from "lucide-react";
 export default function SeccionesPorSubcategoria() {
   const { grupos, cargando, error } = useProductosPorSubcategoria(12);
 
+  //Si está cargando
   if (cargando) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] gap-4">
@@ -15,6 +16,7 @@ export default function SeccionesPorSubcategoria() {
     );
   }
 
+  //Si existe algún error 
   if (error) {
     return (
       <div className="max-w-2xl mx-auto mt-12 p-8 bg-red-50 border-2 border-red-200 rounded-2xl">
@@ -31,6 +33,7 @@ export default function SeccionesPorSubcategoria() {
     );
   }
 
+  //Si la cantidad de grupos es 0
   if (!grupos || grupos.length === 0) {
     return (
       <div className="max-w-2xl mx-auto mt-12 p-12 text-center">
@@ -47,19 +50,24 @@ export default function SeccionesPorSubcategoria() {
     );
   }
 
+  //POR DEFECTO
   return (
     <section className="mx-auto max-w-7xl px-4 py-12 space-y-16">
       {grupos.map(({ subcategoria, productos }, index) => (
+        <div key={subcategoria.id}>
+
+        {subcategoria.visible &&((
         <div 
           key={subcategoria.id}
-          className="animate-fadeIn"
-          style={{ animationDelay: `${index * 100}ms` }}
+          className="flex flex-col justify-center items-center"
+
         >
+
           {/* Header de la sección */}
           <div className="mb-8">
             <div className="flex items-center justify-center gap-3 mb-3">
               <div className="h-[2px] w-12 bg-gradient-to-r from-transparent to-[#6F2521]" />
-              <h2 className="text-4xl font-bold text-[#6F2521] tracking-tight">
+              <h2 className="max-sm:text-2xl sm:text-4xl lg:text-4xl xl:text-4xl  font-bold text-[#6F2521] ">
                 {subcategoria.nombre}
               </h2>
               <div className="h-[2px] w-12 bg-gradient-to-l from-transparent to-[#6F2521]" />
@@ -80,7 +88,7 @@ export default function SeccionesPorSubcategoria() {
                 return (
                   <div 
                     key={p.id} 
-                    className="snap-start shrink-0 w-72"
+                    className="shrink-0"
                   >
                     <CardProducto
                       id={p.id}
@@ -107,42 +115,10 @@ export default function SeccionesPorSubcategoria() {
             </div>
           )}
         </div>
+        ))}
+        </div>
       ))}
     </section>
   );
 }
 
-// Agregar estos estilos al archivo CSS global o en el head
-const styles = `
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.6s ease-out forwards;
-  opacity: 0;
-}
-`;
-
-// Si usas un archivo de estilos, agrega la animación allí
-// Si prefieres inline, puedes usar el componente Style
-function Style() {
-  return <style>{styles}</style>;
-}
-
-// Exportar con el estilo incluido
-export function SeccionesPorSubcategoriaConEstilos() {
-  return (
-    <>
-      <Style />
-      <SeccionesPorSubcategoria />
-    </>
-  );
-}
