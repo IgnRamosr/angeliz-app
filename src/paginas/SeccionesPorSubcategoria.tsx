@@ -52,19 +52,19 @@ export default function SeccionesPorSubcategoria() {
 
   //POR DEFECTO
   return (
-    <section className="mx-auto max-w-7xl px-4 py-12 space-y-16">
+    <section className="mx-auto max-w-fit px-4 py-12 space-y-16">
       {grupos.map(({ subcategoria, productos }, index) => (
         <div key={subcategoria.id}>
 
         {subcategoria.visible &&((
         <div 
           key={subcategoria.id}
-          className="flex flex-col justify-center items-center"
+          className="flex flex-col justify-center items-center overflow-hidden"
 
         >
 
           {/* Header de la sección */}
-          <div className="mb-8">
+          <div className="mb-8 ">
             <div className="flex items-center justify-center gap-3 mb-3">
               <div className="h-[2px] w-12 bg-gradient-to-r from-transparent to-[#6F2521]" />
               <h2 className="max-sm:text-2xl sm:text-4xl lg:text-4xl xl:text-4xl  font-bold text-[#6F2521] ">
