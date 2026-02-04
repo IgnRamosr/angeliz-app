@@ -7,8 +7,9 @@
     import { useCart } from "../Navegacion/useCart";
     import FechaEntregaPicker from "./FechaEntregaPicker";
     import { toLocalISODate } from "../../utils/fechas";
+import { comprimirImagen, eliminarImagenReferenciaSupabase, importarImagenReferenciaPorRuta, subirImagenReferenciaSupabase } from "../../hooks/useUploadImageSupabase";
 
-    export const FormularioTorta = ({id, nombre, tamano_producto, sabor_producto, tipo_formulario, imagenes_producto }: PropsFormularioTorta) => {
+    export const FormularioTorta = ({id, nombre, tamano_producto, sabor_producto, tipo_formulario, imagenes_producto}: PropsFormularioTorta) => {
 
     const sesion = useUserSession();
 
@@ -25,12 +26,15 @@
     const [uid, setUid] = useState<UID>(`${""}-${""}-${""}-${""}-${""}`);
     const [tamano, setTamano] = useState<number>(tamano_producto[0]?.tamano);
     const [tamano_id, setTamano_id] = useState<number>(tamano_producto[0]?.tamano_id ?? 1);
+    const [fechaEntrega, setFechaEntrega] = useState<Date | null>(null);
     const [sabor_id, setSabor_id] = useState<number>(sabor_producto[0]?.sabores.sabor_id ?? 1);
     const [saborNombre, setSaborNombre] = useState<string>(sabor_producto[0]?.sabores.nombre ?? "Chocolate");
-    const [, setImagenReferencia] = useState<File | null>();
-    const [fechaEntrega, setFechaEntrega] = useState<Date | null>(null);
+    const [vistaPreviaImagen, setVistaPreviaImagen] = useState<string | null>(null);
+    const [imagenReferencia, setImagenReferencia] = useState<File | null>();
+    const [rutaImagenReferencia, setRutaImagenReferencia] = useState<string | undefined>('');
     const [agregaNombreEdad, setagregaNombreEdad] = useState<boolean>(false);
     const [metodoEnvio, setMetodoEnvio] = useState<string>("Retiro en domicilio");
+
     const [esconder, setEsconder] = useState<boolean>(false);
 
     useEffect(() => {
@@ -39,11 +43,14 @@
         setUid(atributosAcambiar.uid);
         setTamano(atributosAcambiar.tamano);
         setTamano_id(atributosAcambiar.tamano_id);
+        setFechaEntrega(new Date(atributosAcambiar.fecha_entrega));
         setSabor_id(atributosAcambiar.sabor_id);
         setSaborNombre(atributosAcambiar.sabor_nombre);
-        setFechaEntrega(new Date(atributosAcambiar.fecha_entrega));
+        setRutaImagenReferencia(atributosAcambiar.ruta_imagen_referencia);
         setMetodoEnvio(atributosAcambiar.metodo_envio);
         setagregaNombreEdad(!!atributosAcambiar.agregaNombreEdad);
+        setImagenReferencia(null);
+        setVistaPreviaImagen(null);
 
     }, [atributosAcambiar]);
 
@@ -55,76 +62,6 @@
         const tieneMetodo = typeof metodoEnvio === "string" && metodoEnvio.trim().length > 0;
         return tieneTamano && tieneSabor && tieneFecha && tieneMetodo;
     }, [tamano_id, sabor_id, fechaEntrega, metodoEnvio]);
-
-    const enviarFormulario = async (e: React.FormEvent) => {
-        e.preventDefault();
-
-        if (!isFormComplete) {
-        toast.clearWaitingQueue();
-        toast.warning("Completa todos los campos para continuar.");
-        return;
-        }
-
-        setEsconder(true);
-        if (esconder) return;
-
-        const imagenURL = imagenes_producto?.[0]?.url ?? "";
-        const fechaStr = fechaEntrega ? toLocalISODate(fechaEntrega) : "";
-
-        {/* Sí editamos al item se asigna los valores previamente capturados*/}
-
-        if (editarItem) {
-        const item = {
-            uid,
-            user_id: sesion?.user.id,
-            nombre_producto: nombre,
-            tamano,
-            fecha_entrega: fechaStr,
-            sabor_nombre: saborNombre,
-            agregaNombreEdad: agregaNombreEdad,
-            metodo_envio: metodoEnvio,
-            imagen_url: imagenURL,
-            producto_id: id,
-            sabor_id: sabor_id,
-            tamano_id: tamano_id,
-            tipo_formulario
-        };
-
-        await actualizarProductoCarrito(item);
-        actualizarItem(item);
-        toast.clearWaitingQueue();
-        toast.info("¡Producto actualizado con éxito!");
-        redirigir("/carrito");
-        } 
-
-        // Si no editamos, o sea agregamos se crea el campo nuevouid con crypto
-
-        else {
-        const nuevoUid = crypto.randomUUID?.();
-        const item = {
-            uid: nuevoUid,
-            user_id: sesion?.user.id,
-            nombre_producto: nombre,
-            tamano,
-            fecha_entrega: fechaStr,
-            sabor_nombre: saborNombre,
-            agregaNombreEdad,
-            metodo_envio: metodoEnvio,
-            imagen_url: imagenURL,
-            producto_id: id,
-            sabor_id: sabor_id,
-            tamano_id: tamano_id,
-            tipo_formulario
-        };
-
-        await agregarProductoCarrito(item);
-        agregarItem(item);
-
-        toast.clearWaitingQueue();
-        toast.success("¡Producto agregado al carrito!");
-        redirigir("/");
-        }
-    };
 
     const CapturarSaborIDyNombre = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const id = Number(e.currentTarget.value);
@@ -140,7 +77,7 @@
         setTamano(obj!.tamano);
     };
 
-    const validarImagen = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const validarImagen = async (e: React.ChangeEvent<HTMLInputElement>) => {
 
         const validarTipoYtamaño = (archivo: File) =>{
 
@@ -149,7 +86,7 @@
                 return toast.error('Tipo de imagen no permitida');
             }
 
-            const tamañoMaximoImagen = 2;
+            const tamañoMaximoImagen = 5;
             if (archivo.size > tamañoMaximoImagen * 1024 * 1024){
                 return toast.error('El tamaño de imagen supera a los 2MB');
             }
@@ -169,8 +106,110 @@
             return;
         }
 
-        setImagenReferencia(archivo);
+        const archivoComprimido = await comprimirImagen(archivo);
 
+
+        setImagenReferencia(archivoComprimido);
+
+        const vistaPreviaURL = URL.createObjectURL(archivoComprimido);
+        setVistaPreviaImagen(vistaPreviaURL);
+
+    };
+
+    const enviarFormulario = async (e: React.FormEvent) => {
+        e.preventDefault();
+        let rutaArchivo: string | undefined = undefined;
+
+        //Validación si el formulario no está completo
+        if (!isFormComplete) {
+        toast.clearWaitingQueue();
+        toast.warning("Completa todos los campos para continuar.");
+        return;
+        }
+
+        setEsconder(true);
+        if (esconder) return;
+
+        const imagenURL = imagenes_producto?.[0]?.url ?? "";
+        const fechaStr = fechaEntrega ? toLocalISODate(fechaEntrega) : "";
+
+
+        {/* Sí editamos al item se asigna los valores previamente capturados*/}
+
+        if (editarItem) {
+
+        await eliminarImagenReferenciaSupabase(uid);
+
+        if (imagenReferencia){
+            rutaArchivo = await subirImagenReferenciaSupabase(imagenReferencia, sesion?.user.id);
+        }
+
+        const item = {
+            uid,
+            user_id: sesion?.user.id,
+            nombre_producto: nombre,
+            tamano,
+            fecha_entrega: fechaStr,
+            sabor_nombre: saborNombre,
+            ruta_imagen_referencia: rutaArchivo,
+            agregaNombreEdad: agregaNombreEdad,
+            metodo_envio: metodoEnvio,
+            imagen_url: imagenURL,
+            producto_id: id,
+            sabor_id: sabor_id,
+            tamano_id: tamano_id,
+            tipo_formulario
+        };
+
+
+
+
+        await actualizarProductoCarrito(item);
+        actualizarItem(item);
+        toast.clearWaitingQueue();
+        toast.info("¡Producto actualizado con éxito!");
+
+
+        setImagenReferencia(null);
+
+        redirigir("/carrito");
+        } 
+
+        // Si no editamos, o sea agregamos se crea el campo nuevouid con crypto
+
+        else {
+        if (imagenReferencia){
+            rutaArchivo = await subirImagenReferenciaSupabase(imagenReferencia, sesion?.user.id);
+        }
+
+        const nuevoUid = crypto.randomUUID?.();
+        const item = {
+            uid: nuevoUid,
+            user_id: sesion?.user.id,
+            nombre_producto: nombre,
+            tamano,
+            fecha_entrega: fechaStr,
+            sabor_nombre: saborNombre,
+            ruta_imagen_referencia: rutaArchivo,
+            agregaNombreEdad,
+            metodo_envio: metodoEnvio,
+            imagen_url: imagenURL,
+            producto_id: id,
+            sabor_id: sabor_id,
+            tamano_id: tamano_id,
+            tipo_formulario
+        };
+
+        await agregarProductoCarrito(item);
+        agregarItem(item);
+
+        toast.clearWaitingQueue();
+        toast.success("¡Producto agregado al carrito!");
+
+        setImagenReferencia(null);
+
+        redirigir("/");
+        }
     };
 
     return (
@@ -229,12 +268,27 @@
             <div className="space-y-2">
             <label className="block text-sm font-semibold text-gray-700">Imagen de referencia</label>
             <input type="file"
-            accept=".jpg, .png, jepg" 
+            accept=".jpg, .png, .jepg" 
             className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none" 
-            onChange={validarImagen}/>
+            onChange={validarImagen}
+            required={nombre.toLocaleLowerCase().includes('crea')}/>
         </div>
         )}
 
+
+        {vistaPreviaImagen ? (
+        <img
+            src={vistaPreviaImagen}
+            alt="Preview imagen seleccionada"
+            style={{ maxWidth: 200 }}
+        />
+        ) : rutaImagenReferencia ? (
+        <img
+            src={importarImagenReferenciaPorRuta(rutaImagenReferencia)}
+            alt="Imagen de referencia guardada"
+            style={{ maxWidth: 200 }}
+        />
+        ) : null}
 
         {/* Campo desea agregar nombre y/o edad */}
 

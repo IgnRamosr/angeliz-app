@@ -10,6 +10,7 @@ import { useRef } from "react";
 import  FormularioContacto, {type FormularioContactoRef}  from "../componentes/ModuloCliente/FormularioContacto";
 import { supabase } from "../supabase/supabaseClient";
 import type { datosFormContacto } from '../assets/types-interfaces/interfaces';
+import { eliminarImagenReferenciaSupabase } from "../hooks/useUploadImageSupabase";
 
 
 
@@ -68,21 +69,29 @@ export const CarritoDeCompras = () => {
   }, []);
 
   const eliminarItemCarrito = async (uid: UID) => {
+    await eliminarImagenReferenciaSupabase(uid);
     await eliminarProductoCarrito(uid);
     eliminarItem(uid);
     setItems(item => item.filter(it => it.uid !== uid));
   }
 
-  const editarItem = (item: CarritoItem) => {
+  const editarItem = async (item: CarritoItem) => {
+
+    const itemsActualizados = await listarProductosCarrito();
+    const itemActualizado = itemsActualizados.find(i => i.uid === item.uid);
+
+    const itemAEditar = itemActualizado || item;
+
     const atributosAcambiar = {
-      uid: item.uid,
-      tamano: item.tamano,
-      tamano_id: item.tamano_id,
-      sabor_id: item.sabor_id,
-      sabor_nombre: item.sabor_nombre,
-      fecha_entrega: item.fecha_entrega,
-      metodo_envio: item.metodo_envio,
-      agregaNombreEdad: item.agregaNombreEdad
+      uid: itemAEditar.uid,
+      tamano: itemAEditar.tamano,
+      tamano_id: itemAEditar.tamano_id,
+      sabor_id: itemAEditar.sabor_id,
+      sabor_nombre: itemAEditar.sabor_nombre,
+      ruta_imagen_referencia: itemAEditar.ruta_imagen_referencia,
+      fecha_entrega: itemAEditar.fecha_entrega,
+      metodo_envio: itemAEditar.metodo_envio,
+      agregaNombreEdad: itemAEditar.agregaNombreEdad
     };
 
     redirigir(`/producto/${item.producto_id}?editar=${item.uid}`, { state: { atributosAcambiar } });

@@ -1,4 +1,4 @@
-import { type PropsWithChildren, useRef, useState } from "react";
+import { type PropsWithChildren, useRef } from "react";
 
 
 type Props = PropsWithChildren<{ className?: string }>;

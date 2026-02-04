@@ -270,7 +270,7 @@ const pedidosFiltrados = useMemo(() => {
                   <th className="px-6 py-4 text-left">
                     <div className="flex items-center gap-2">
                       <FileText className="w-4 h-4 text-[#6F2521]" />
-                      <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">ID Pedido</span>
+                      <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Nro Pedido</span>
                     </div>
                   </th>
                   <th className="px-6 py-4 text-left">

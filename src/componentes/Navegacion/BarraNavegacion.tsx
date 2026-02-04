@@ -23,9 +23,7 @@ return (
     <header className="bg-[#fff0f5] max-sm:h-40 sm:h-40  lg:h-26 w-full  flex flex-wrap items-center ">
       {/*LINKS DE NAVEGACIÓN*/}
       <nav className="max-sm:hidden sm:hidden lg:flex lg:flex-1 lg:justify-start lg:ml-8 xl:ml-16 lg:text-sm xl:text-lg">
-        <LinksBarraNavegacion sesion={sesion} columna={false} cerrarAlClickearItem={function (): void {
-        throw new Error("Function not implemented.");
-      } } />
+        <LinksBarraNavegacion sesion={sesion} columna={false} cerrarAlClickearItem={function (): void {} } />
       </nav>
 
       {/*BOTÓN BARRA LATERAL*/}

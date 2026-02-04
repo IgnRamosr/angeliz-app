@@ -43,7 +43,7 @@ const guardarContacto = async (userId: string| undefined, c: datosFormContacto) 
     return data.id;
 };
 
-    const promoverCuentaAnonima = async (correo: string, password: string) => {
+const promoverCuentaAnonima = async (correo: string, password: string) => {
     // Mantiene el mismo user_id
     const { error } = await supabase.auth.updateUser({
         email: correo,
@@ -89,7 +89,7 @@ const insertarFormulario = async (itemsCarrito: CarritoItem[], idsItemsPedido: n
     const filas = itemsCarrito
     .map((item, index) => ({item, item_pedido_id: idsItemsPedido?.[index]}))
     .filter(({item, item_pedido_id}) => item!.tipo_formulario == "torta" && !!item_pedido_id)
-    .map(({item, item_pedido_id})=>({item_pedido_id,tamano_id: item.tamano_id, sabor_id: item.sabor_id, fecha_entrega: item.fecha_entrega, agregar_nombre_edad:item.agregaNombreEdad, metodo_envio: item.metodo_envio}));
+    .map(({item, item_pedido_id})=>({item_pedido_id,tamano_id: item.tamano_id, sabor_id: item.sabor_id, ruta_imagen_referencia: item.ruta_imagen_referencia, fecha_entrega: item.fecha_entrega, agregar_nombre_edad:item.agregaNombreEdad, metodo_envio: item.metodo_envio}));
 
     const { error } = await supabase.from("formulario_torta").insert(filas);
 
