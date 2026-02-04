@@ -387,17 +387,13 @@ export default function FechaEntregaPicker({ value, onChange, minDaysFromToday =
       <div className="px-4 py-3 bg-white border-t border-pink-200">
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-amber-100 to-amber-200 border-2 border-amber-400 flex-shrink-0 shadow-sm"></div>
-            <span className="text-gray-700 font-medium">Día actual</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg flex-shrink-0 flex items-center justify-center bg-gray-200 relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300" style={{
-                backgroundImage: 'repeating-linear-gradient(45deg, #f3f4f6, #f3f4f6 4px, #e5e7eb 4px, #e5e7eb 8px)'
+            <div className="w-6 h-6 rounded-lg flex-shrink-0 flex items-center justify-center bg-pink-200 relative overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-pink-200 to-pink-300" style={{
+                backgroundImage: 'repeating-linear-gradient(30deg, bg-pink, #f3f4f6 4px, #e5e7eb 4px, #e5e7eb 8px)'
               }}></div>
-              <span className="relative text-red-500 font-bold text-xs">✕</span>
+              <span className="relative text-gray-400 font-bold text-xs">D</span>
             </div>
-            <span className="text-gray-700 font-medium">No disponible</span>
+            <span className="text-gray-700 font-medium">Días no disponibles</span>
           </div>
         </div>
       </div>

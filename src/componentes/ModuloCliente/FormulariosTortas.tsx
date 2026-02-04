@@ -262,7 +262,7 @@ import { comprimirImagen, eliminarImagenReferenciaSupabase, importarImagenRefere
             </select>
         </div>
 
-        {/* Campo imagen de referencia (Solo aparece si el título de la torta tiene "crea") */}
+        {/* Campo imagen de referencia y vista previa de la imagen (Solo aparece si el título de la torta tiene "crea") */}
 
         {nombre.toLocaleLowerCase().includes('crea') && (
             <div className="space-y-2">

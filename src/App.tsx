@@ -20,8 +20,8 @@ function App() {
 
     return (
     <>
-    {/* <Analytics/>
-    <SpeedInsights/> */}
+    <Analytics/>
+    <SpeedInsights/>
         <ProveedorFuncionesCarrito >
             <UserRoleProvider>
                 <Enrutador/>
