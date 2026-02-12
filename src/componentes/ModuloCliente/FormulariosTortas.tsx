@@ -273,7 +273,7 @@
             accept=".jpg, .png, .jepg" 
             className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none" 
             onChange={validarImagen}
-            required={nombre.toLocaleLowerCase().includes('crea') && rutaImagenReferencia == null}/>
+            required={nombre.toLocaleLowerCase().includes('crea') && rutaImagenReferencia !== null}/>
         </div>
         
         )}
