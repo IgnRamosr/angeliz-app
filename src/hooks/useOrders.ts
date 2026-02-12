@@ -72,6 +72,8 @@ const items = filas
     sabor_nombre: f.sabor_nombre,
     agregar_nombre_edad: f.agregar_nombre_edad,
     metodo_envio: f.metodo_envio,
+    ruta_imagen_referencia: f.ruta_imagen_referencia,
+    detalle_torta: f.detalle_torta
     }));
 
 return { cabecera, items };

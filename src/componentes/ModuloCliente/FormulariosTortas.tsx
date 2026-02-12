@@ -7,7 +7,7 @@
     import { useCart } from "../Navegacion/useCart";
     import FechaEntregaPicker from "./FechaEntregaPicker";
     import { toLocalISODate } from "../../utils/fechas";
-import { comprimirImagen, eliminarImagenReferenciaSupabase, importarImagenReferenciaPorRuta, subirImagenReferenciaSupabase } from "../../hooks/useUploadImageSupabase";
+    import { comprimirImagen, eliminarImagenReferenciaSupabase, importarImagenReferenciaPorRuta, subirImagenReferenciaSupabase } from "../../hooks/useUploadImageSupabase";
 
     export const FormularioTorta = ({id, nombre, tamano_producto, sabor_producto, tipo_formulario, imagenes_producto}: PropsFormularioTorta) => {
 
@@ -31,6 +31,7 @@ import { comprimirImagen, eliminarImagenReferenciaSupabase, importarImagenRefere
     const [saborNombre, setSaborNombre] = useState<string>(sabor_producto[0]?.sabores.nombre ?? "Chocolate");
     const [vistaPreviaImagen, setVistaPreviaImagen] = useState<string | null>(null);
     const [imagenReferencia, setImagenReferencia] = useState<File | null>();
+    const [detalleTorta, setDetalleTorta] = useState<string | undefined>('');
     const [rutaImagenReferencia, setRutaImagenReferencia] = useState<string | undefined>('');
     const [agregaNombreEdad, setagregaNombreEdad] = useState<boolean>(false);
     const [metodoEnvio, setMetodoEnvio] = useState<string>("Retiro en domicilio");
@@ -47,6 +48,7 @@ import { comprimirImagen, eliminarImagenReferenciaSupabase, importarImagenRefere
         setSabor_id(atributosAcambiar.sabor_id);
         setSaborNombre(atributosAcambiar.sabor_nombre);
         setRutaImagenReferencia(atributosAcambiar.ruta_imagen_referencia);
+        setDetalleTorta(atributosAcambiar.detalle_torta);
         setMetodoEnvio(atributosAcambiar.metodo_envio);
         setagregaNombreEdad(!!atributosAcambiar.agregaNombreEdad);
         setImagenReferencia(null);
@@ -169,7 +171,6 @@ import { comprimirImagen, eliminarImagenReferenciaSupabase, importarImagenRefere
         toast.clearWaitingQueue();
         toast.info("¡Producto actualizado con éxito!");
 
-
         setImagenReferencia(null);
 
         redirigir("/carrito");
@@ -191,6 +192,7 @@ import { comprimirImagen, eliminarImagenReferenciaSupabase, importarImagenRefere
             fecha_entrega: fechaStr,
             sabor_nombre: saborNombre,
             ruta_imagen_referencia: rutaArchivo,
+            detalle_torta: detalleTorta,
             agregaNombreEdad,
             metodo_envio: metodoEnvio,
             imagen_url: imagenURL,
@@ -271,10 +273,10 @@ import { comprimirImagen, eliminarImagenReferenciaSupabase, importarImagenRefere
             accept=".jpg, .png, .jepg" 
             className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none" 
             onChange={validarImagen}
-            required={nombre.toLocaleLowerCase().includes('crea')}/>
+            required={nombre.toLocaleLowerCase().includes('crea') && rutaImagenReferencia == null}/>
         </div>
+        
         )}
-
 
         {vistaPreviaImagen ? (
         <img
@@ -289,6 +291,33 @@ import { comprimirImagen, eliminarImagenReferenciaSupabase, importarImagenRefere
             style={{ maxWidth: 200 }}
         />
         ) : null}
+
+        {/* Campo detalle de torta  (Solo aparece si el título de la torta tiene "crea") */}
+        {nombre.toLocaleLowerCase().includes('crea') && (
+
+        <div className="space-y-2">
+        <label className="block text-sm font-semibold text-gray-700">
+            Detalle torta
+            <span className="text-gray-500 text-xs ml-2">
+            {detalleTorta?.length}/300 caracteres
+            </span>
+        </label>
+        <textarea
+            value={detalleTorta}
+            onChange={(e) => setDetalleTorta(e.target.value)}
+            placeholder="Ej: Sin nueces por alergia, agregar mensaje 'Feliz cumpleaños María', decoración con flores rosadas..."
+            rows={4}
+            maxLength={300}
+            required={nombre.toLocaleLowerCase().includes('crea') && detalleTorta == null}
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none resize-none"
+        />
+        <p className="text-xs text-gray-500">
+            Especifica alergias, instrucciones de decoración o mensajes personalizados
+        </p>
+        </div>
+
+        )}
+
 
         {/* Campo desea agregar nombre y/o edad */}
 

@@ -89,7 +89,12 @@ const insertarFormulario = async (itemsCarrito: CarritoItem[], idsItemsPedido: n
     const filas = itemsCarrito
     .map((item, index) => ({item, item_pedido_id: idsItemsPedido?.[index]}))
     .filter(({item, item_pedido_id}) => item!.tipo_formulario == "torta" && !!item_pedido_id)
-    .map(({item, item_pedido_id})=>({item_pedido_id,tamano_id: item.tamano_id, sabor_id: item.sabor_id, ruta_imagen_referencia: item.ruta_imagen_referencia, fecha_entrega: item.fecha_entrega, agregar_nombre_edad:item.agregaNombreEdad, metodo_envio: item.metodo_envio}));
+    .map(({item, item_pedido_id})=>({
+    item_pedido_id,tamano_id: item.tamano_id, sabor_id: item.sabor_id, 
+    ruta_imagen_referencia: item.ruta_imagen_referencia, detalle_torta: item.detalle_torta, 
+    fecha_entrega: item.fecha_entrega, agregar_nombre_edad:item.agregaNombreEdad, 
+    metodo_envio: item.metodo_envio
+    }));
 
     const { error } = await supabase.from("formulario_torta").insert(filas);
 

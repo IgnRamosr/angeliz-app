@@ -14,10 +14,13 @@ import {
   Cake,
   Users,
   Truck,
+  Eye,
+  AlbumIcon,
 } from "lucide-react";
 
 // ⬇️ Reutilizamos tus utilidades
 import { buildWhatsAppHrefFromPedido, openWhatsApp } from "../../utils/whatsapp";
+import { importarImagenReferenciaPorRuta } from "../../hooks/useUploadImageSupabase";
 
 export default function AdminPedidoDetalle() {
   const { id } = useParams();
@@ -27,6 +30,8 @@ export default function AdminPedidoDetalle() {
   const [cabecera, setCabecera] = useState<any>(null);
   const [items, setItems] = useState<any[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [imagenAbierta, setImagenAbierta] = useState<string | null>(null);
+  const [detalleAbierto, setDetalleAbierto] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -34,6 +39,7 @@ export default function AdminPedidoDetalle() {
         const { cabecera, items } = await obtenerPedidoDetalleAdmin(pedidoId);
         setCabecera(cabecera);
         setItems(items);
+        console.log(items)
       } catch (e: any) {
         setError(e?.message ?? "Error cargando detalle");
       } finally {
@@ -53,6 +59,8 @@ export default function AdminPedidoDetalle() {
       sabor_nombre: it.sabor_nombre ?? null,
       fecha_entrega: it.fecha_entrega ?? null,
       metodo_envio: it.metodo_envio ?? null,
+      ruta_imagen_referencia: it.ruta_imagen_referencia ?? null,
+      detalle_torta: it.detalle_torta ?? null
     }));
 
     return buildWhatsAppHrefFromPedido({
@@ -267,6 +275,8 @@ export default function AdminPedidoDetalle() {
                         <th className="text-left p-4 text-sm font-semibold text-gray-700">Entrega</th>
                         <th className="text-left p-4 text-sm font-semibold text-gray-700">Personalizado</th>
                         <th className="text-left p-4 text-sm font-semibold text-gray-700">Envío</th>
+                        <th className="text-left p-4 text-sm font-semibold text-gray-700">Imagen</th>
+                        <th className="text-left p-4 text-sm font-semibold text-gray-700">Detalle</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -330,6 +340,20 @@ export default function AdminPedidoDetalle() {
                             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium">
                               <Truck className="w-4 h-4" />
                               {it.metodo_envio ?? "—"}
+                            </span>
+                          </td>
+                          <td className="p-4">
+                            <span onClick={() => {if(!it.ruta_imagen_referencia) return; setImagenAbierta(importarImagenReferenciaPorRuta(it.ruta_imagen_referencia))}} 
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium cursor-pointer">
+                              <Eye className="w-4 h-4" />
+                              <button className="cursor-pointer">Ver</button>
+                            </span>
+                          </td>
+                          <td className="p-4">
+                            <span onClick={() => {if(!it.detalle_torta) return; setDetalleAbierto(it.detalle_torta)}} 
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium cursor-pointer">
+                              <AlbumIcon className="w-4 h-4" />
+                              <button className="cursor-pointer">Ver</button>
                             </span>
                           </td>
                         </tr>
@@ -417,10 +441,37 @@ export default function AdminPedidoDetalle() {
                             <Truck className="w-4 h-4" />
                             Método de envío
                           </span>
-                          <span className="font-medium text-gray-800 bg-indigo-50 px-3 py-1 rounded-lg text-sm">
+                          <span className="font-medium text-center text-gray-800 bg-indigo-50 px-3 py-1 rounded-lg text-sm">
                             {it.metodo_envio ?? "—"}
                           </span>
                         </div>
+
+                        {it.ruta_imagen_referencia && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600 flex items-center gap-2">
+                            <Eye className="w-4 h-4" />
+                            Imagen
+                          </span>
+                          <span onClick={() => {if(!it.ruta_imagen_referencia) return; setImagenAbierta(importarImagenReferenciaPorRuta(it.ruta_imagen_referencia))}} 
+                          className="font-medium text-gray-800 bg-indigo-50 px-3 py-1 rounded-lg text-sm">
+                            Ver imagen
+                          </span>
+                        </div>
+                        )}
+
+                        {it.detalle_torta && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-600 flex items-center gap-2">
+                            <AlbumIcon className="w-4 h-4" />
+                            Detalle
+                          </span>
+                          <span onClick={() => {if(!it.detalle_torta) return; setDetalleAbierto(it.detalle_torta)}} 
+                          className="font-medium text-gray-800 bg-indigo-50 px-3 py-1 rounded-lg text-sm">
+                            Ver detalle
+                          </span>
+                        </div>
+                        )}
+
                       </div>
                     </div>
                   ))}
@@ -430,6 +481,63 @@ export default function AdminPedidoDetalle() {
           </div>
         </div>
       </div>
+
+  {imagenAbierta && (
+    <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50" onClick={() => setImagenAbierta(null)}>
+      <img className="max-w-[80%] max-h-[80%]" src={imagenAbierta} onClick={e => e.stopPropagation()} />
+    </div>
+  )}
+
+  {detalleAbierto && (
+    <div 
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 p-4"
+      onClick={() => setDetalleAbierto(null)}
+    >
+      <div 
+        className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-h-[85vh] overflow-hidden transform transition-all"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="bg-gradient-to-r from-pink-500 to-purple-600 px-6 py-4 flex justify-between items-center">
+          <h3 className="text-xl font-bold text-white flex items-center gap-2">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+            </svg>
+            Detalles de la torta
+          </h3>
+          <button
+            onClick={() => setDetalleAbierto(null)}
+            className="text-white hover:bg-white/20 rounded-full p-2 transition-all"
+            aria-label="Cerrar modal"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="px-6 py-6 overflow-y-auto max-h-[calc(85vh-80px)]">
+          <div className="bg-gradient-to-br from-pink-50 to-purple-50 rounded-xl p-5 border border-pink-100">
+            <p className="text-gray-800 leading-relaxed whitespace-pre-wrap break-words">
+              {detalleAbierto}
+            </p>
+          </div>
+        </div>
+
+        {/* Footer opcional */}
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+          <button
+            onClick={() => setDetalleAbierto(null)}
+            className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold py-3 rounded-lg hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
+
     </div>
   );
 }

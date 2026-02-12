@@ -39,7 +39,7 @@ export async function subirImagenReferenciaSupabase(archivo: File, userId: strin
 
 }
 
-
+// Función para eliminar la imagen de referencia en el carrito
 export async function eliminarImagenReferenciaSupabase(uid: UID) {
 
     const {data, error: errorConsulta} = await supabase.from('carrito_items').select('ruta_imagen_referencia').eq("uid",uid).single();
@@ -54,7 +54,7 @@ export async function eliminarImagenReferenciaSupabase(uid: UID) {
 
 }
 
-
+// Función para poder mostrar la imagen desde la base de datos
 export function importarImagenReferenciaPorRuta(rutaImagenReferencia: string) {
 
     const {data} = supabase.storage.from('referencia_torta_personalizada').getPublicUrl(rutaImagenReferencia);

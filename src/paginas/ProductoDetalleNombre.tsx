@@ -13,7 +13,7 @@
     }, [nombre, buscar]);
 
     return (
-        <section className="mx-auto max-w-6xl p-4">
+        <section className="mx-auto max-w-6xl p-4 flex flex-col items-center">
         <h1 className="mb-4 text-2xl font-semibold">Resultados para “{nombre}”</h1>
 
         {cargando && <p>Buscando…</p>}

@@ -41,7 +41,7 @@ export type LinksProps = {sesion: Session | null, columna: boolean, cerrarAlClic
 
 export type PropsFormularioTorta  = Pick<Producto,"id" | "nombre" | "tamano_producto" | "sabor_producto" | "tipo_formulario" | "imagenes_producto"> & {imagenDeReferencia?:File};
 
-export type CarritoItem = {uid: UID; user_id?:string; nombre_producto: string;  tamano:number; fecha_entrega:string; sabor_nombre: string; ruta_imagen_referencia?: string; agregaNombreEdad?:boolean; metodo_envio:string; imagen_url: string; producto_id: number; sabor_id:number; tamano_id: number; tipo_formulario:string; };
+export type CarritoItem = {uid: UID; user_id?:string; nombre_producto: string;  tamano:number; fecha_entrega:string; sabor_nombre: string; ruta_imagen_referencia?: string; detalle_torta?:string, agregaNombreEdad?:boolean; metodo_envio:string; imagen_url: string; producto_id: number; sabor_id:number; tamano_id: number; tipo_formulario:string; };
 
 export type PedidoConItems = {id: number; usuario_id: string; fecha_solicitud: string; items_pedido: ItemPedido[];
 };

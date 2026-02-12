@@ -89,6 +89,7 @@ export const CarritoDeCompras = () => {
       sabor_id: itemAEditar.sabor_id,
       sabor_nombre: itemAEditar.sabor_nombre,
       ruta_imagen_referencia: itemAEditar.ruta_imagen_referencia,
+      detalle_torta: itemAEditar.detalle_torta,
       fecha_entrega: itemAEditar.fecha_entrega,
       metodo_envio: itemAEditar.metodo_envio,
       agregaNombreEdad: itemAEditar.agregaNombreEdad
