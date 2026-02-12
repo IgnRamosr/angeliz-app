@@ -308,7 +308,7 @@
             placeholder="Ej: Sin nueces por alergia, agregar mensaje 'Feliz cumpleaños María', decoración con flores rosadas..."
             rows={4}
             maxLength={300}
-            required={nombre.toLocaleLowerCase().includes('crea') && detalleTorta == null}
+            required={nombre.toLocaleLowerCase().includes('crea') && detalleTorta !== null}
             className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none resize-none"
         />
         <p className="text-xs text-gray-500">
