@@ -20,47 +20,52 @@ export const useUserProfile = () => {
 };
 
 
-
-
-
 export const useUserRole = () => {
-
     const [rol, setRol] = useState<Rol>(null);
     const [cargando, setCargando] = useState(true);
 
-
     useEffect(() => {
-        let desubscribir: (() => void) | undefined;
-
-    
-        (async () => {
-            try{
-                const {data: {user}} = await supabase.auth.getUser();
-                if (!user) { setRol(null); return; }
-
-                const{data, error} = await supabase
-                .from("profiles")
-                .select("tipo")
-                .eq("id", user.id)
-                .single();
-
-                if(!error && data.tipo) setRol(data.tipo as Rol);
+        const cargarRol = async (userId: string | undefined) => {
+            if (!userId) {
+                setRol(null);
+                setCargando(false);
+                return;
             }
-            finally{
+
+            try {
+                const { data, error } = await supabase
+                    .from("profiles")
+                    .select("tipo")
+                    .eq("id", userId)
+                    .single();
+
+                if (!error && data?.tipo) setRol(data.tipo as Rol);
+                else setRol(null);
+            } finally {
                 setCargando(false);
             }
-        })();
+        };
 
-        const {data} = supabase.auth.onAuthStateChange((event) => {
-        if(event === 'SIGNED_OUT'){
-            setRol(null);
-        }});
+        // Carga inicial
+        supabase.auth.getUser().then(({ data: { user } }) => {
+            cargarRol(user?.id);
+        });
 
-        desubscribir = () => data.subscription.unsubscribe();
-        return () => {if(desubscribir)desubscribir();}
-    }, [])
-    
+        // Reacciona a cambios de sesión
+        const { data } = supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN') {
+                setCargando(true); // importante: vuelve a indicar que está cargando
+                cargarRol(session?.user?.id);
+            }
+            if (event === 'SIGNED_OUT') {
+                setRol(null);
+                setCargando(false);
+            }
+        });
+
+        return () => data.subscription.unsubscribe();
+    }, []);
+
     const esAdmin = rol === "admin";
-    return {rol,esAdmin,cargando}
-}
-
+    return { rol, esAdmin, cargando };
+};

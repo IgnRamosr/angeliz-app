@@ -17,7 +17,7 @@ import { eliminarImagenReferenciaSupabase } from "../hooks/useUploadImageSupabas
 
 export const CarritoDeCompras = () => {
   const { listarProductosCarrito, eliminarProductoCarrito, vaciarProductosCarrito } = useCartFunctions();
-  const [, setItems] = useState<CarritoItem[]>([]);
+  const [ items , setItems] = useState<CarritoItem[]>([]);
   const [sesion, setSession] = useState<boolean>();
   const [loading, setLoading] = useState(true);
   const {eliminarItem} = useCart();
@@ -25,7 +25,7 @@ export const CarritoDeCompras = () => {
 
   const refContacto = useRef<FormularioContactoRef>(null);
 
-  const { items , vaciarCarrito  } = useCart();
+  const { vaciarCarrito  } = useCart();
   
   
 
@@ -69,7 +69,8 @@ export const CarritoDeCompras = () => {
   }, []);
 
   const eliminarItemCarrito = async (uid: UID) => {
-    await eliminarImagenReferenciaSupabase(uid);
+    const item = items.find(it => it.uid === uid);
+    await eliminarImagenReferenciaSupabase(uid, item!.tipo_formulario);
     await eliminarProductoCarrito(uid);
     eliminarItem(uid);
     setItems(item => item.filter(it => it.uid !== uid));
@@ -89,10 +90,11 @@ export const CarritoDeCompras = () => {
       sabor_id: itemAEditar.sabor_id,
       sabor_nombre: itemAEditar.sabor_nombre,
       ruta_imagen_referencia: itemAEditar.ruta_imagen_referencia,
-      detalle_torta: itemAEditar.detalle_torta,
+      detalle: itemAEditar.detalle,
       fecha_entrega: itemAEditar.fecha_entrega,
       metodo_envio: itemAEditar.metodo_envio,
-      agregaNombreEdad: itemAEditar.agregaNombreEdad
+      agregaNombreEdad: itemAEditar.agregaNombreEdad,
+      cantidad: itemAEditar.cantidad
     };
 
     redirigir(`/producto/${item.producto_id}?editar=${item.uid}`, { state: { atributosAcambiar } });

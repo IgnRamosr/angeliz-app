@@ -1,9 +1,12 @@
 import { useNavigate } from "react-router-dom"
 import type {Card} from "../../assets/types-interfaces/types"
+import { useUserRole } from "../../hooks/useUserProfile";
 
 
 
 export const CardProducto = ({id, nombre, precio, imagenURL}: Card) => {
+
+    const {esAdmin} = useUserRole();
 
     const redirigir = useNavigate();
     const regidigirAproducto = (id: number) => () => redirigir(`/producto/${id}`);
@@ -11,7 +14,10 @@ export const CardProducto = ({id, nombre, precio, imagenURL}: Card) => {
 return (
     <div 
         className="group w-full max-w-xs cursor-pointer transform transition-all duration-300 hover:scale-105" 
-        onClick={regidigirAproducto(id)}
+        onClick={() => {
+            if(esAdmin){redirigir('/')} 
+            else{redirigir(`/producto/${id}`)}
+        }}
     >
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden transition-shadow duration-300 group-hover:shadow-2xl">
             <div className="relative overflow-hidden aspect-square">

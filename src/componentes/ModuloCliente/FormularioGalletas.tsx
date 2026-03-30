@@ -3,13 +3,13 @@
     import useUserSession from "../../hooks/useUserSession";
     import { useNavigate, useLocation } from "react-router-dom";
     import { toast } from "react-toastify";
-    import type { CarritoItem, PropsFormularioTorta, UID } from "../../assets/types-interfaces/types";
+    import type { CarritoItem, PropsFormularioGalletas, UID } from "../../assets/types-interfaces/types";
     import { useCart } from "../Navegacion/useCart";
     import FechaEntregaPicker from "./FechaEntregaPicker";
     import { toLocalISODate } from "../../utils/fechas";
     import { comprimirImagen, eliminarImagenReferenciaSupabase, importarImagenReferenciaPorRuta, subirImagenReferenciaSupabase } from "../../hooks/useUploadImageSupabase";
 
-    export const FormularioTorta = ({id, nombre, tamano_producto, sabor_producto, tipo_formulario, imagenes_producto}: PropsFormularioTorta) => {
+    export const FormularioGalletas = ({id, nombre, tipo_formulario, imagenes_producto}: PropsFormularioGalletas) => {
 
     const sesion = useUserSession();
 
@@ -24,33 +24,27 @@
     const atributosAcambiar = state?.atributosAcambiar as CarritoItem | undefined;
 
     const [uid, setUid] = useState<UID>(`${""}-${""}-${""}-${""}-${""}`);
-    const [tamano, setTamano] = useState<number | undefined>(tamano_producto[0]?.tamano);
-    const [tamano_id, setTamano_id] = useState<number | undefined>(tamano_producto[0]?.tamano_id ?? 1);
+    const [cantidad, setCantidad] = useState<number | undefined>(1);
     const [fechaEntrega, setFechaEntrega] = useState<Date | null>(null);
-    const [sabor_id, setSabor_id] = useState<number | undefined>(sabor_producto[0]?.sabores.sabor_id ?? 1);
-    const [saborNombre, setSaborNombre] = useState<string | undefined>(sabor_producto[0]?.sabores.nombre ?? "Chocolate");
     const [vistaPreviaImagen, setVistaPreviaImagen] = useState<string | null>(null);
     const [imagenReferencia, setImagenReferencia] = useState<File | null>();
-    const [detalleTorta, setDetalleTorta] = useState<string | undefined>('');
+    const [detalleGalletas, setDetalleGalletas] = useState<string | undefined>('');
     const [rutaImagenReferencia, setRutaImagenReferencia] = useState<string | undefined>('');
-    const [agregaNombreEdad, setagregaNombreEdad] = useState<boolean>(false);
     const [metodoEnvio, setMetodoEnvio] = useState<string>("Retiro en domicilio");
 
     const [esconder, setEsconder] = useState<boolean>(false);
 
     useEffect(() => {
-        if (!atributosAcambiar) return;
 
+
+        //Agregar campo galletas, verificar función de actualizar
+        if (!atributosAcambiar) return;
         setUid(atributosAcambiar.uid);
-        setTamano(atributosAcambiar.tamano);
-        setTamano_id(atributosAcambiar.tamano_id);
         setFechaEntrega(new Date(atributosAcambiar.fecha_entrega));
-        setSabor_id(atributosAcambiar.sabor_id);
-        setSaborNombre(atributosAcambiar.sabor_nombre);
         setRutaImagenReferencia(atributosAcambiar.ruta_imagen_referencia);
-        setDetalleTorta(atributosAcambiar.detalle);
+        setDetalleGalletas(atributosAcambiar.detalle);
         setMetodoEnvio(atributosAcambiar.metodo_envio);
-        setagregaNombreEdad(!!atributosAcambiar.agregaNombreEdad);
+        setCantidad(atributosAcambiar.cantidad);
         setImagenReferencia(null);
         setVistaPreviaImagen(null);
 
@@ -58,26 +52,12 @@
 
     {/* Función para validar si el formulario está completo */}
     const isFormComplete = useMemo(() => {
-        const tieneTamano = Number.isFinite(tamano_id) && tamano_id! > 0;
-        const tieneSabor = Number.isFinite(sabor_id) && sabor_id! > 0;
+        const tieneCantidad = cantidad! > 0;
         const tieneFecha = fechaEntrega instanceof Date && !isNaN(fechaEntrega.getTime());
         const tieneMetodo = typeof metodoEnvio === "string" && metodoEnvio.trim().length > 0;
-        return tieneTamano && tieneSabor && tieneFecha && tieneMetodo;
-    }, [tamano_id, sabor_id, fechaEntrega, metodoEnvio]);
+        return tieneCantidad && tieneFecha && tieneMetodo;
+    }, [cantidad, fechaEntrega, metodoEnvio]);
 
-    const CapturarSaborIDyNombre = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const id = Number(e.currentTarget.value);
-        const obj = sabor_producto.find((sabor) => sabor.sabor_id == id);
-        setSabor_id(id);
-        setSaborNombre(obj!.sabores.nombre);
-    };
-
-    const CapturarTamanoIDyNombre = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const id = Number(e.currentTarget.value);
-        const obj = tamano_producto.find((t) => t.tamano_id == id);
-        setTamano_id(id);
-        setTamano(obj!.tamano);
-    };
 
     const validarImagen = async (e: React.ChangeEvent<HTMLInputElement>) => {
 
@@ -140,26 +120,26 @@
 
         if (editarItem) {
 
+
+        await eliminarImagenReferenciaSupabase(uid, tipo_formulario);
+
         if (imagenReferencia){
-            await eliminarImagenReferenciaSupabase(uid, tipo_formulario);
             rutaArchivo = await subirImagenReferenciaSupabase(imagenReferencia, sesion?.user.id, tipo_formulario);
         }
+
+        //Agregar atributo cantidad
 
         const item = {
             uid,
             user_id: sesion?.user.id,
             nombre_producto: nombre,
-            tamano,
             fecha_entrega: fechaStr,
-            sabor_nombre: saborNombre,
             ruta_imagen_referencia: rutaArchivo,
-            agregaNombreEdad: agregaNombreEdad,
             metodo_envio: metodoEnvio,
             imagen_url: imagenURL,
             producto_id: id,
-            sabor_id: sabor_id,
-            tamano_id: tamano_id,
-            tipo_formulario
+            tipo_formulario,
+            cantidad: cantidad ?? 1
         };
 
 
@@ -182,23 +162,20 @@
             rutaArchivo = await subirImagenReferenciaSupabase(imagenReferencia, sesion?.user.id, tipo_formulario);
         }
 
+
         const nuevoUid = crypto.randomUUID?.();
         const item = {
             uid: nuevoUid,
             user_id: sesion?.user.id,
             nombre_producto: nombre,
-            tamano,
             fecha_entrega: fechaStr,
-            sabor_nombre: saborNombre,
             ruta_imagen_referencia: rutaArchivo,
-            detalle: detalleTorta,
-            agregaNombreEdad,
+            detalle: detalleGalletas,
             metodo_envio: metodoEnvio,
             imagen_url: imagenURL,
             producto_id: id,
-            sabor_id: sabor_id,
-            tamano_id: tamano_id,
-            tipo_formulario
+            tipo_formulario,
+            cantidad: cantidad ?? 1
         };
 
         await agregarProductoCarrito(item);
@@ -213,6 +190,7 @@
         }
     };
 
+
     return (
         <form
         onSubmit={enviarFormulario}
@@ -220,23 +198,17 @@
         >
         <h2 className="text-2xl font-bold text-gray-800 mb-6">Personaliza tu pedido</h2>
 
-        {/* Campo cantidad de personas */}
+
+        {/* Campo cantidad */}
 
         <div className="space-y-2">
-            <label className="block text-sm font-semibold text-gray-700">Cantidad de personas</label>
-            <select
-            value={tamano_id}
-            onChange={CapturarTamanoIDyNombre}
-            required
-            className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none"
-            >
-            {tamano_producto?.map((item, index) => (
-                <option key={index} value={item.tamano_id}>
-                {item.tamano}
-                </option>
-            ))}
-            </select>
+            <label className="block text-sm font-semibold text-gray-700">Cantidad</label>
+            <input type="number" min={1} max={99}
+            value={cantidad}
+            onChange={(e) => setCantidad(+e.target.value)}
+            className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none resize-none" />
         </div>
+
 
         {/* Campo fecha entrega */}
 
@@ -245,25 +217,9 @@
             <FechaEntregaPicker value={fechaEntrega} onChange={setFechaEntrega} minDaysFromToday={1} />
         </div>
 
-        {/* Campo sabor */}
 
-        <div className="space-y-2">
-            <label className="block text-sm font-semibold text-gray-700">Sabor</label>
-            <select
-            value={sabor_id}
-            onChange={CapturarSaborIDyNombre}
-            required
-            className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none"
-            >
-            {sabor_producto.map((item, index) => (
-                <option key={index} value={item.sabor_id}>
-                {item.sabores.nombre}
-                </option>
-            ))}
-            </select>
-        </div>
 
-        {/* Campo imagen de referencia y vista previa de la imagen (Solo aparece si el título de la torta tiene "crea") */}
+        {/* Campo imagen de referencia y vista previa de la imagen (Solo aparece si el título de galletas tiene "crea") */}
 
         {nombre.toLocaleLowerCase().includes('crea') && (
             <div className="space-y-2">
@@ -272,7 +228,7 @@
             accept=".jpg, .png, .jepg" 
             className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none" 
             onChange={validarImagen}
-            required={nombre.toLocaleLowerCase().includes('crea') && !editarItem}/>
+            required={nombre.toLocaleLowerCase().includes('crea') && !editarItem}/> 
         </div>
         
         )}
@@ -291,23 +247,23 @@
         />
         ) : null}
 
-        {/* Campo detalle de torta  (Solo aparece si el título de la torta tiene "crea") */}
+        {/* Campo detalle de galletas  (Solo aparece si el título de galletas tiene "crea") */}
         {nombre.toLocaleLowerCase().includes('crea') && (
 
         <div className="space-y-2">
         <label className="block text-sm font-semibold text-gray-700">
-            Detalle torta
+            Detalle galletas
             <span className="text-gray-500 text-xs ml-2">
-            {detalleTorta?.length}/300 caracteres
+            {detalleGalletas?.length}/300 caracteres
             </span>
         </label>
         <textarea
-            value={detalleTorta}
-            onChange={(e) => setDetalleTorta(e.target.value)}
+            value={detalleGalletas}
+            onChange={(e) => setDetalleGalletas(e.target.value)}
             placeholder="Ej: Sin nueces por alergia, agregar mensaje 'Feliz cumpleaños María', decoración con flores rosadas..."
             rows={4}
             maxLength={300}
-            required={nombre.toLocaleLowerCase().includes('crea') && detalleTorta !== null}
+            required={nombre.toLocaleLowerCase().includes('crea') && !editarItem}
             className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none resize-none"
         />
         <p className="text-xs text-gray-500">
@@ -320,31 +276,6 @@
 
         {/* Campo desea agregar nombre y/o edad */}
 
-        <div className="space-y-3">
-            <label className="block text-sm font-semibold text-gray-700">¿Desea agregar nombre y/o edad?</label>
-            <div className="flex gap-6">
-            <label className="flex items-center gap-2 cursor-pointer group">
-                <input
-                checked={agregaNombreEdad === true}
-                type="radio"
-                name="agregar_datos"
-                onChange={() => setagregaNombreEdad(true)}
-                className="w-4 h-4 text-pink-600 focus:ring-[#f57fa6] cursor-pointer"
-                />
-                <span className="text-gray-700 group-hover:text-gray-900 transition-colors">Sí</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer group">
-                <input
-                checked={agregaNombreEdad === false}
-                type="radio"
-                name="agregar_datos"
-                onChange={() => setagregaNombreEdad(false)}
-                className="w-4 h-4 text-[#f57fa6] focus:ring-[#f57fa6] cursor-pointer"
-                />
-                <span className="text-gray-700 group-hover:text-gray-900 transition-colors">No</span>
-            </label>
-            </div>
-        </div>
 
         {/* Campo método de envío */}
 
@@ -360,7 +291,6 @@
             <option value="Retiro en domicilio">Retiro en domicilio</option>
             <option value="UberFlash">UberFlash</option>
             <option value="Metro">Metro</option>
-            {nombre.includes('lunchcake') && <option value="Delivery">Delivery</option>}
             </select>
         </div>
 

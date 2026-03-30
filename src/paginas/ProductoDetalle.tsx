@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom"
 import { useProduct } from "../hooks/useProducts";
 import { FormularioTorta } from "../componentes/ModuloCliente/FormulariosTortas";
+import { FormularioGalletas } from "../componentes/ModuloCliente/FormularioGalletas";
 
 export const ProductoDetalle = () => {
     const {id} = useParams();
@@ -37,6 +38,9 @@ export const ProductoDetalle = () => {
                     <div className="lg:sticky lg:top-8 h-fit">
                         {producto?.tipo_formulario == 'torta' && (
                             <FormularioTorta id={productoId} nombre={producto.nombre} imagenes_producto={producto.imagenes_producto} tamano_producto={producto.tamano_producto} sabor_producto={producto.sabor_producto} tipo_formulario={producto.tipo_formulario} />
+                        )}
+                        {producto?.tipo_formulario == 'galletas' && (
+                            <FormularioGalletas id={productoId} nombre={producto.nombre} imagenes_producto={producto.imagenes_producto} tipo_formulario={producto.tipo_formulario} />
                         )}
                     </div>
                 </div>

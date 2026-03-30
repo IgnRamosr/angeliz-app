@@ -26,13 +26,13 @@ export async function comprimirImagen(archivo: File) {
 
 // Función para subir imagen de pedido personalizado, solo para guardar la imagen del producto
 // al momento de guardar el producto en el carrito
-export async function subirImagenReferenciaSupabase(archivo: File, userId: string | undefined) {
+export async function subirImagenReferenciaSupabase(archivo: File, userId: string | undefined, bucket: string) {
 
     const limpiarNombreArchivo = archivo.name.split('.').pop();
     const nombreArchivo = `${crypto.randomUUID()}.${limpiarNombreArchivo}`
     const rutaArchivo = `${userId}/${nombreArchivo}`;
 
-    const {error} = await supabase.storage.from('referencia_torta_personalizada').upload(rutaArchivo, archivo,{cacheControl: '3600',upsert:false,contentType: archivo.type})
+    const {error} = await supabase.storage.from(`referencia_${bucket}_personalizada`).upload(rutaArchivo, archivo,{cacheControl: '3600',upsert:false,contentType: archivo.type})
     if (error) throw error;
 
     return rutaArchivo;
@@ -40,7 +40,7 @@ export async function subirImagenReferenciaSupabase(archivo: File, userId: strin
 }
 
 // Función para eliminar la imagen de referencia en el carrito
-export async function eliminarImagenReferenciaSupabase(uid: UID) {
+export async function eliminarImagenReferenciaSupabase(uid: UID, bucket:string) {
 
     const {data, error: errorConsulta} = await supabase.from('carrito_items').select('ruta_imagen_referencia').eq("uid",uid).single();
 
@@ -49,15 +49,15 @@ export async function eliminarImagenReferenciaSupabase(uid: UID) {
     if (errorConsulta) throw errorConsulta;
 
 
-    const {error} = await supabase.storage.from('referencia_torta_personalizada').remove([data.ruta_imagen_referencia])
+    const {error} = await supabase.storage.from(`referencia_${bucket}_personalizada`).remove([data.ruta_imagen_referencia])
     if (error) throw error;
 
 }
 
 // Función para poder mostrar la imagen desde la base de datos
-export function importarImagenReferenciaPorRuta(rutaImagenReferencia: string) {
+export function importarImagenReferenciaPorRuta(rutaImagenReferencia: string, bucket: string) {
 
-    const {data} = supabase.storage.from('referencia_torta_personalizada').getPublicUrl(rutaImagenReferencia);
+    const {data} = supabase.storage.from(`referencia_${bucket}_personalizada`).getPublicUrl(rutaImagenReferencia);
 
     return data.publicUrl;
 }

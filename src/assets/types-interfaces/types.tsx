@@ -41,11 +41,13 @@ export type LinksProps = {sesion: Session | null, columna: boolean, cerrarAlClic
 
 export type PropsFormularioTorta  = Pick<Producto,"id" | "nombre" | "tamano_producto" | "sabor_producto" | "tipo_formulario" | "imagenes_producto"> & {imagenDeReferencia?:File};
 
-export type CarritoItem = {uid: UID; user_id?:string; nombre_producto: string;  tamano:number; fecha_entrega:string; sabor_nombre: string; ruta_imagen_referencia?: string; detalle_torta?:string, agregaNombreEdad?:boolean; metodo_envio:string; imagen_url: string; producto_id: number; sabor_id:number; tamano_id: number; tipo_formulario:string; };
+export type PropsFormularioGalletas = Pick<Producto,"id" | "nombre"  | "tipo_formulario" | "imagenes_producto">
+
+export type CarritoItem = {uid: UID; user_id?:string; nombre_producto: string;  tamano?:number; fecha_entrega:string; sabor_nombre?: string; ruta_imagen_referencia?: string; detalle?:string; agregaNombreEdad?:boolean; metodo_envio:string; imagen_url: string; producto_id: number; sabor_id?:number; tamano_id?: number; tipo_formulario:string; cantidad?: number; };
 
 export type PedidoConItems = {id: number; usuario_id: string; fecha_solicitud: string; items_pedido: ItemPedido[];
 };
-export type ItemPedido = { id: number; producto_id: number; nombre:ProductoNombre;  subtotal: number, formulario_torta: FormularioTorta };
+export type ItemPedido = { id: number; producto_id: number; nombre:ProductoNombre;  subtotal: number, formulario_torta: FormularioTorta, formulario_galletas: FormularioGalletas };
 
 export type ProductoNombre = { nombre: string };
 
@@ -53,9 +55,9 @@ export type Tamano = { tamano: number };
 
 export type Sabor  = { nombre: string };
 
-export type FormularioTorta = {id: number; item_pedido_id: number; tamano: Tamano; sabor_nombre: Sabor; fecha_entrega: string; agregar_nombre_edad: boolean; metodo_envio: string;
-};
+export type FormularioTorta = {id: number; item_pedido_id: number; tamano: Tamano; sabor_nombre: Sabor; fecha_entrega: string; agregar_nombre_edad: boolean; metodo_envio: string; ruta_imagen_referencia?:string;};
 
+export type FormularioGalletas = {id: number; item_pedido_id: number; cantidad: number; fecha_entrega: string; ruta_imagen_referencia?:string; metodo_envio: string;};
 
 export type PedidoResumen = {id: number; usuario_id: string | null; fecha_solicitud: string | null; creado_en: string | null; contacto_nombre: string | null; contacto_apellido: string | null; contacto_telefono: string | null;};
 

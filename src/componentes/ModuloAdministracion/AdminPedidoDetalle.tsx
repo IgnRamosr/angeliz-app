@@ -16,6 +16,7 @@ import {
   Truck,
   Eye,
   AlbumIcon,
+  Cookie,
 } from "lucide-react";
 
 // ⬇️ Reutilizamos tus utilidades
@@ -39,7 +40,6 @@ export default function AdminPedidoDetalle() {
         const { cabecera, items } = await obtenerPedidoDetalleAdmin(pedidoId);
         setCabecera(cabecera);
         setItems(items);
-        console.log(items)
       } catch (e: any) {
         setError(e?.message ?? "Error cargando detalle");
       } finally {
@@ -241,245 +241,246 @@ export default function AdminPedidoDetalle() {
         </div>
 
         {/* Ítems del Pedido */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
-          <div className="bg-gradient-to-r from-[#6F2521] to-[#8B3330] px-4 sm:px-6 py-4">
-            <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-3">
-              <Package className="w-6 h-6" />
-              Productos del Pedido
-            </h2>
-            <p className="text-white/80 text-sm mt-1">
-              {items.length} {items.length === 1 ? "producto" : "productos"}
-            </p>
+<div className="p-4 sm:p-6 space-y-8">
+  {!items.length ? (
+    <div className="text-center py-12">
+      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+        <Package className="w-8 h-8 text-gray-400" />
+      </div>
+      <p className="text-gray-600 font-medium">Este pedido no tiene ítems asociados.</p>
+    </div>
+  ) : (
+    <>
+      {/* ── TABLA TORTAS ── */}
+      {items.some(it => it.tipo_formulario !== "galletas") && (
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            <Cake className="w-5 h-5 text-[#6F2521]" />
+            Tortas
+          </h3>
+
+          {/* Desktop */}
+          <div className="hidden lg:block overflow-x-auto rounded-xl border border-gray-200">
+            <table className="min-w-full">
+              <thead>
+                <tr className="bg-gray-50 border-b-2 border-gray-200">
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Producto</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Tamaño</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Sabor</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Entrega</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Personalizado</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Envío</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Imagen</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Detalle</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.filter(it => it.tipo_formulario !== "galletas").map((it, idx) => (
+                  <tr key={it.item_id} className={`border-b last:border-0 hover:bg-gray-50 transition-colors ${idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        {it.producto_imagen && (
+                          <img src={it.producto_imagen} alt={it.producto_nombre ?? ""} className="w-14 h-14 object-cover rounded-lg border-2 border-gray-200 flex-shrink-0" />
+                        )}
+                        <span className="font-medium text-gray-800">{it.producto_nombre ?? "—"}</span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium">
+                        <Users className="w-4 h-4" />{it.tamano_personas ?? "—"}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-sm font-medium">
+                        <Cake className="w-4 h-4" />{it.sabor_nombre ?? "—"}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-sm font-medium">
+                        <Calendar className="w-4 h-4" />
+                        {it.fecha_entrega ? new Date(it.fecha_entrega).toLocaleDateString("es-CL") : "—"}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium ${it.agregar_nombre_edad ? "bg-amber-50 text-amber-700" : "bg-gray-100 text-gray-600"}`}>
+                        {it.agregar_nombre_edad == null ? "—" : it.agregar_nombre_edad ? "Sí" : "No"}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium">
+                        <Truck className="w-4 h-4" />{it.metodo_envio ?? "—"}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span
+                        onClick={() => { if (!it.ruta_imagen_referencia) return; setImagenAbierta(importarImagenReferenciaPorRuta(it.ruta_imagen_referencia, it.tipo_formulario)); }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium ${it.ruta_imagen_referencia ? "bg-indigo-50 text-indigo-700 cursor-pointer hover:bg-indigo-100" : "bg-gray-100 text-gray-400"}`}
+                      >
+                        <Eye className="w-4 h-4" />{it.ruta_imagen_referencia ? "Ver" : "—"}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span
+                        onClick={() => { if (!it.detalle) return; setDetalleAbierto(it.detalle); }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium ${it.detalle ? "bg-indigo-50 text-indigo-700 cursor-pointer hover:bg-indigo-100" : "bg-gray-100 text-gray-400"}`}
+                      >
+                        <AlbumIcon className="w-4 h-4" />{it.detalle ? "Ver" : "—"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
-          <div className="p-4 sm:p-6">
-            {!items.length ? (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Package className="w-8 h-8 text-gray-400" />
+          {/* Mobile - Tortas */}
+          <div className="lg:hidden space-y-4">
+            {items.filter(it => it.tipo_formulario !== "galletas").map((it) => (
+              <div key={it.item_id} className="bg-gray-50 rounded-xl border-2 border-gray-200 overflow-hidden hover:border-[#6F2521] transition-colors">
+                <div className="bg-white p-4 flex items-center gap-3 border-b border-gray-200">
+                  {it.producto_imagen && <img src={it.producto_imagen} alt={it.producto_nombre ?? ""} className="w-16 h-16 object-cover rounded-lg border-2 border-gray-200 flex-shrink-0" />}
+                  <h3 className="font-semibold text-gray-800 text-lg truncate">{it.producto_nombre ?? "—"}</h3>
                 </div>
-                <p className="text-gray-600 font-medium">
-                  Este pedido no tiene ítems asociados.
-                </p>
-              </div>
-            ) : (
-              <>
-                {/* Desktop: Tabla */}
-                <div className="hidden lg:block overflow-x-auto">
-                  <table className="min-w-full">
-                    <thead>
-                      <tr className="bg-gray-50 border-b-2 border-gray-200">
-                        <th className="text-left p-4 text-sm font-semibold text-gray-700">Producto</th>
-                        <th className="text-left p-4 text-sm font-semibold text-gray-700">Tamaño</th>
-                        <th className="text-left p-4 text-sm font-semibold text-gray-700">Sabor</th>
-                        <th className="text-left p-4 text-sm font-semibold text-gray-700">Entrega</th>
-                        <th className="text-left p-4 text-sm font-semibold text-gray-700">Personalizado</th>
-                        <th className="text-left p-4 text-sm font-semibold text-gray-700">Envío</th>
-                        <th className="text-left p-4 text-sm font-semibold text-gray-700">Imagen</th>
-                        <th className="text-left p-4 text-sm font-semibold text-gray-700">Detalle</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {items.map((it, idx) => (
-                        <tr
-                          key={it.item_id}
-                          className={`border-b last:border-0 hover:bg-gray-50 transition-colors ${
-                            idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"
-                          }`}
-                        >
-                          <td className="p-4">
-                            <div className="flex items-center gap-3">
-                              {it.producto_imagen && (
-                                <img
-                                  src={it.producto_imagen}
-                                  alt={it.producto_nombre ?? ""}
-                                  className="w-14 h-14 object-cover rounded-lg border-2 border-gray-200 flex-shrink-0"
-                                />
-                              )}
-                              <span className="font-medium text-gray-800">
-                                {it.producto_nombre ?? "—"}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium">
-                              <Users className="w-4 h-4" />
-                              {it.tamano_personas ?? "—"}
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-sm font-medium">
-                              <Cake className="w-4 h-4" />
-                              {it.sabor_nombre ?? "—"}
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-sm font-medium">
-                              <Calendar className="w-4 h-4" />
-                              {it.fecha_entrega
-                                ? new Date(it.fecha_entrega).toLocaleDateString("es-CL")
-                                : "—"}
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            <span
-                              className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium ${
-                                it.agregar_nombre_edad
-                                  ? "bg-amber-50 text-amber-700"
-                                  : "bg-gray-100 text-gray-600"
-                              }`}
-                            >
-                              {it.agregar_nombre_edad == null
-                                ? "—"
-                                : it.agregar_nombre_edad
-                                ? "Sí"
-                                : "No"}
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium">
-                              <Truck className="w-4 h-4" />
-                              {it.metodo_envio ?? "—"}
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            <span onClick={() => {if(!it.ruta_imagen_referencia) return; setImagenAbierta(importarImagenReferenciaPorRuta(it.ruta_imagen_referencia))}} 
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium cursor-pointer">
-                              <Eye className="w-4 h-4" />
-                              <button className="cursor-pointer">Ver</button>
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            <span onClick={() => {if(!it.detalle_torta) return; setDetalleAbierto(it.detalle_torta)}} 
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium cursor-pointer">
-                              <AlbumIcon className="w-4 h-4" />
-                              <button className="cursor-pointer">Ver</button>
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Mobile/Tablet: Cards */}
-                <div className="lg:hidden space-y-4">
-                  {items.map((it) => (
-                    <div
-                      key={it.item_id}
-                      className="bg-gray-50 rounded-xl border-2 border-gray-200 overflow-hidden hover:border-[#6F2521] transition-colors"
-                    >
-                      {/* Imagen y nombre */}
-                      <div className="bg-white p-4 flex items-center gap-3 border-b border-gray-200">
-                        {it.producto_imagen && (
-                          <img
-                            src={it.producto_imagen}
-                            alt={it.producto_nombre ?? ""}
-                            className="w-16 h-16 object-cover rounded-lg border-2 border-gray-200 flex-shrink-0"
-                          />
-                        )}
-                        <div className="min-w-0">
-                          <h3 className="font-semibold text-gray-800 text-lg truncate">
-                            {it.producto_nombre ?? "—"}
-                          </h3>
-                        </div>
-                      </div>
-
-                      {/* Detalles */}
-                      <div className="p-4 space-y-3">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600 flex items-center gap-2">
-                            <Users className="w-4 h-4" />
-                            Tamaño
-                          </span>
-                          <span className="font-medium text-gray-800 bg-blue-50 px-3 py-1 rounded-lg text-sm">
-                            {it.tamano_personas ?? "—"}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600 flex items-center gap-2">
-                            <Cake className="w-4 h-4" />
-                            Sabor
-                          </span>
-                          <span className="font-medium text-gray-800 bg-purple-50 px-3 py-1 rounded-lg text-sm">
-                            {it.sabor_nombre ?? "—"}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600 flex items-center gap-2">
-                            <Calendar className="w-4 h-4" />
-                            Entrega
-                          </span>
-                          <span className="font-medium text-gray-800 bg-green-50 px-3 py-1 rounded-lg text-sm">
-                            {it.fecha_entrega
-                              ? new Date(it.fecha_entrega).toLocaleDateString("es-CL")
-                              : "—"}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600">Personalizado</span>
-                          <span
-                            className={`font-medium px-3 py-1 rounded-lg text-sm ${
-                              it.agregar_nombre_edad
-                                ? "bg-amber-50 text-amber-700"
-                                : "bg-gray-100 text-gray-600"
-                            }`}
-                          >
-                            {it.agregar_nombre_edad == null
-                              ? "—"
-                              : it.agregar_nombre_edad
-                              ? "Sí"
-                              : "No"}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600 flex items-center gap-2">
-                            <Truck className="w-4 h-4" />
-                            Método de envío
-                          </span>
-                          <span className="font-medium text-center text-gray-800 bg-indigo-50 px-3 py-1 rounded-lg text-sm">
-                            {it.metodo_envio ?? "—"}
-                          </span>
-                        </div>
-
-                        {it.ruta_imagen_referencia && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600 flex items-center gap-2">
-                            <Eye className="w-4 h-4" />
-                            Imagen
-                          </span>
-                          <span onClick={() => {if(!it.ruta_imagen_referencia) return; setImagenAbierta(importarImagenReferenciaPorRuta(it.ruta_imagen_referencia))}} 
-                          className="font-medium text-gray-800 bg-indigo-50 px-3 py-1 rounded-lg text-sm">
-                            Ver imagen
-                          </span>
-                        </div>
-                        )}
-
-                        {it.detalle_torta && (
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-600 flex items-center gap-2">
-                            <AlbumIcon className="w-4 h-4" />
-                            Detalle
-                          </span>
-                          <span onClick={() => {if(!it.detalle_torta) return; setDetalleAbierto(it.detalle_torta)}} 
-                          className="font-medium text-gray-800 bg-indigo-50 px-3 py-1 rounded-lg text-sm">
-                            Ver detalle
-                          </span>
-                        </div>
-                        )}
-
-                      </div>
+                <div className="p-4 space-y-3">
+                  {[
+                    { icon: <Users className="w-4 h-4" />, label: "Tamaño", value: it.tamano_personas ?? "—", bg: "bg-blue-50" },
+                    { icon: <Cake className="w-4 h-4" />, label: "Sabor", value: it.sabor_nombre ?? "—", bg: "bg-purple-50" },
+                    { icon: <Calendar className="w-4 h-4" />, label: "Entrega", value: it.fecha_entrega ? new Date(it.fecha_entrega).toLocaleDateString("es-CL") : "—", bg: "bg-green-50" },
+                    { icon: null, label: "Personalizado", value: it.agregar_nombre_edad == null ? "—" : it.agregar_nombre_edad ? "Sí" : "No", bg: it.agregar_nombre_edad ? "bg-amber-50" : "bg-gray-100" },
+                    { icon: <Truck className="w-4 h-4" />, label: "Envío", value: it.metodo_envio ?? "—", bg: "bg-indigo-50" },
+                  ].map(({ icon, label, value, bg }) => (
+                    <div key={label} className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 flex items-center gap-2">{icon}{label}</span>
+                      <span className={`font-medium text-gray-800 ${bg} px-3 py-1 rounded-lg text-sm`}>{value}</span>
                     </div>
                   ))}
+                  {it.ruta_imagen_referencia && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 flex items-center gap-2"><Eye className="w-4 h-4" />Imagen</span>
+                      <span onClick={() => setImagenAbierta(importarImagenReferenciaPorRuta(it.ruta_imagen_referencia, it.tipo_formulario))} className="font-medium text-indigo-700 bg-indigo-50 px-3 py-1 rounded-lg text-sm cursor-pointer hover:bg-indigo-100">Ver imagen</span>
+                    </div>
+                  )}
+                  {it.detalle && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 flex items-center gap-2"><AlbumIcon className="w-4 h-4" />Detalle</span>
+                      <span onClick={() => setDetalleAbierto(it.detalle)} className="font-medium text-indigo-700 bg-indigo-50 px-3 py-1 rounded-lg text-sm cursor-pointer hover:bg-indigo-100">Ver detalle</span>
+                    </div>
+                  )}
                 </div>
-              </>
-            )}
+              </div>
+            ))}
           </div>
         </div>
+      )}
+
+      {/* ── TABLA GALLETAS ── */}
+      {items.some(it => it.tipo_formulario === "galletas") && (
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            <Cookie className="w-5 h-5 text-[#6F2521]" />
+            Galletas
+          </h3>
+
+          {/* Desktop */}
+          <div className="hidden lg:block overflow-x-auto rounded-xl border border-gray-200">
+            <table className="min-w-full">
+              <thead>
+                <tr className="bg-gray-50 border-b-2 border-gray-200">
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Producto</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Cantidad</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Entrega</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Envío</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Imagen ref.</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Detalle</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.filter(it => it.tipo_formulario === "galletas").map((it, idx) => (
+                  <tr key={it.item_id} className={`border-b last:border-0 hover:bg-gray-50 transition-colors ${idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        {it.producto_imagen && <img src={it.producto_imagen} alt={it.producto_nombre ?? ""} className="w-14 h-14 object-cover rounded-lg border-2 border-gray-200 flex-shrink-0" />}
+                        <span className="font-medium text-gray-800">{it.producto_nombre ?? "—"}</span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-yellow-50 text-yellow-700 rounded-lg text-sm font-medium">
+                        <Cookie className="w-4 h-4" />{it.cantidad ? `${it.cantidad} unid.` : "—"}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-sm font-medium">
+                        <Calendar className="w-4 h-4" />
+                        {it.fecha_entrega ? new Date(it.fecha_entrega).toLocaleDateString("es-CL") : "—"}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium">
+                        <Truck className="w-4 h-4" />{it.metodo_envio ?? "—"}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span
+                        onClick={() => { if (!it.ruta_imagen_referencia) return; setImagenAbierta(importarImagenReferenciaPorRuta(it.ruta_imagen_referencia, it.tipo_formulario)); }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium ${it.ruta_imagen_referencia ? "bg-indigo-50 text-indigo-700 cursor-pointer hover:bg-indigo-100" : "bg-gray-100 text-gray-400"}`}
+                      >
+                        <Eye className="w-4 h-4" />{it.ruta_imagen_referencia ? "Ver" : "—"}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span
+                        onClick={() => { if (!it.detalle_galletas) return; setDetalleAbierto(it.detalle_galletas); }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium ${it.detalle_galletas ? "bg-indigo-50 text-indigo-700 cursor-pointer hover:bg-indigo-100" : "bg-gray-100 text-gray-400"}`}
+                      >
+                        <AlbumIcon className="w-4 h-4" />{it.detalle_galletas ? "Ver" : "—"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile - Galletas */}
+          <div className="lg:hidden space-y-4">
+            {items.filter(it => it.tipo_formulario === "galletas").map((it) => (
+              <div key={it.item_id} className="bg-gray-50 rounded-xl border-2 border-gray-200 overflow-hidden hover:border-[#6F2521] transition-colors">
+                <div className="bg-white p-4 flex items-center gap-3 border-b border-gray-200">
+                  {it.producto_imagen && <img src={it.producto_imagen} alt={it.producto_nombre ?? ""} className="w-16 h-16 object-cover rounded-lg border-2 border-gray-200 flex-shrink-0" />}
+                  <h3 className="font-semibold text-gray-800 text-lg truncate">{it.producto_nombre ?? "—"}</h3>
+                </div>
+                <div className="p-4 space-y-3">
+                  {[
+                    { icon: <Cookie className="w-4 h-4" />, label: "Cantidad", value: it.cantidad ? `${it.cantidad} unid.` : "—", bg: "bg-yellow-50" },
+                    { icon: <Calendar className="w-4 h-4" />, label: "Entrega", value: it.fecha_entrega ? new Date(it.fecha_entrega).toLocaleDateString("es-CL") : "—", bg: "bg-green-50" },
+                    { icon: <Truck className="w-4 h-4" />, label: "Envío", value: it.metodo_envio ?? "—", bg: "bg-indigo-50" },
+                  ].map(({ icon, label, value, bg }) => (
+                    <div key={label} className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 flex items-center gap-2">{icon}{label}</span>
+                      <span className={`font-medium text-gray-800 ${bg} px-3 py-1 rounded-lg text-sm`}>{value}</span>
+                    </div>
+                  ))}
+                  {it.ruta_imagen_referencia && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 flex items-center gap-2"><Eye className="w-4 h-4" />Imagen ref.</span>
+                      <span onClick={() => setImagenAbierta(importarImagenReferenciaPorRuta(it.ruta_imagen_referencia, it.tipo_formulario))} className="font-medium text-indigo-700 bg-indigo-50 px-3 py-1 rounded-lg text-sm cursor-pointer hover:bg-indigo-100">Ver imagen</span>
+                    </div>
+                  )}
+                  {it.detalle_galletas && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 flex items-center gap-2"><AlbumIcon className="w-4 h-4" />Detalle</span>
+                      <span onClick={() => setDetalleAbierto(it.detalle_galletas)} className="font-medium text-indigo-700 bg-indigo-50 px-3 py-1 rounded-lg text-sm cursor-pointer hover:bg-indigo-100">Ver detalle</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  )}
+</div>
       </div>
 
   {imagenAbierta && (

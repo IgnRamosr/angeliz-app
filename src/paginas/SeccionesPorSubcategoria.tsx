@@ -52,7 +52,7 @@ export default function SeccionesPorSubcategoria() {
 
   //POR DEFECTO
   return (
-    <section className="mx-auto max-w-fit px-4 py-12 space-y-16">
+    <section className="mx-auto w-full max-w-screen-xl px-4 py-12 space-y-16">
       {grupos.map(({ subcategoria, productos }, index) => (
         <div key={subcategoria.id}>
 

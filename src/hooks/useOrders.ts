@@ -12,12 +12,16 @@ export async function listarPedidosUsuario(): Promise<PedidoConItems[]>{
     if (!user) throw new Error ("Usuario no autenticado");
 
 
-    const {data,error} = await supabase.from("pedidos").
-    select(`
-        id ,usuario_id , fecha_solicitud , 
-        items_pedido(id,producto_id,subtotal, 
-        nombre:productos(nombre),
-        formulario_torta(id, item_pedido_id, tamano:tamano_producto(tamano), sabor_nombre:sabores(nombre),fecha_entrega , agregar_nombre_edad, metodo_envio))`)
+const {data, error} = await supabase.from("pedidos")
+    .select(`
+        id, usuario_id, fecha_solicitud,
+        items_pedido(
+            id, producto_id, subtotal,
+            nombre:productos(nombre),
+            formulario_torta(id, item_pedido_id, tamano:tamano_producto(tamano), sabor_nombre:sabores(nombre), fecha_entrega, agregar_nombre_edad, metodo_envio, ruta_imagen_referencia, detalle),
+            formulario_galletas(id, item_pedido_id, cantidad, ruta_imagen_referencia, detalle, fecha_entrega, metodo_envio)
+        )
+    `)
     .eq("usuario_id", user.id)
     .order("fecha_solicitud", { ascending: false });
 
@@ -64,6 +68,8 @@ const items = filas
     .filter(f => f.item_id !== null)
     .map(f => ({
     item_id: f.item_id!,
+    cantidad : f.cantidad,
+    tipo_formulario: f.tipo_formulario,
     producto_id: f.producto_id,
     producto_nombre: f.producto_nombre,
     producto_imagen: f.producto_imagen,
@@ -73,7 +79,8 @@ const items = filas
     agregar_nombre_edad: f.agregar_nombre_edad,
     metodo_envio: f.metodo_envio,
     ruta_imagen_referencia: f.ruta_imagen_referencia,
-    detalle_torta: f.detalle_torta
+    detalle: f.detalle,
+    detalle_galletas: f.detalle_galletas
     }));
 
 return { cabecera, items };
