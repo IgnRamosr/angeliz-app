@@ -35,6 +35,7 @@
     const [rutaImagenReferencia, setRutaImagenReferencia] = useState<string | undefined>('');
     const [agregaNombreEdad, setagregaNombreEdad] = useState<boolean>(false);
     const [metodoEnvio, setMetodoEnvio] = useState<string>("Retiro en domicilio");
+    const [horaRetiro, setHoraRetiro] = useState<string>('');
 
     const [esconder, setEsconder] = useState<boolean>(false);
 
@@ -53,6 +54,7 @@
         setagregaNombreEdad(!!atributosAcambiar.agregaNombreEdad);
         setImagenReferencia(null);
         setVistaPreviaImagen(null);
+        setHoraRetiro(atributosAcambiar.hora_retiro ?? '');
 
     }, [atributosAcambiar]);
 
@@ -61,9 +63,10 @@
         const tieneTamano = Number.isFinite(tamano_id) && tamano_id! > 0;
         const tieneSabor = Number.isFinite(sabor_id) && sabor_id! > 0;
         const tieneFecha = fechaEntrega instanceof Date && !isNaN(fechaEntrega.getTime());
-        const tieneMetodo = typeof metodoEnvio === "string" && metodoEnvio.trim().length > 0;
-        return tieneTamano && tieneSabor && tieneFecha && tieneMetodo;
-    }, [tamano_id, sabor_id, fechaEntrega, metodoEnvio]);
+        const tieneMetodo = metodoEnvio.trim().length > 0;
+        const tieneHoraRetiro = metodoEnvio !== "Retiro en domicilio" || horaRetiro.trim().length > 0;
+        return tieneTamano && tieneSabor && tieneFecha && tieneMetodo && tieneHoraRetiro;
+    }, [tamano_id, sabor_id, fechaEntrega, metodoEnvio, horaRetiro]);
 
     const CapturarSaborIDyNombre = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const id = Number(e.currentTarget.value);
@@ -159,7 +162,8 @@
             producto_id: id,
             sabor_id: sabor_id,
             tamano_id: tamano_id,
-            tipo_formulario
+            tipo_formulario,
+            hora_retiro: metodoEnvio === "Retiro en domicilio" ? horaRetiro : undefined,
         };
 
 
@@ -198,7 +202,8 @@
             producto_id: id,
             sabor_id: sabor_id,
             tamano_id: tamano_id,
-            tipo_formulario
+            tipo_formulario,
+            hora_retiro: metodoEnvio === "Retiro en domicilio" ? horaRetiro : undefined,
         };
 
         await agregarProductoCarrito(item);
@@ -325,10 +330,10 @@
             <div className="flex gap-6">
             <label className="flex items-center gap-2 cursor-pointer group">
                 <input
-                checked={agregaNombreEdad === true}
+                checked={agregaNombreEdad === false}
                 type="radio"
                 name="agregar_datos"
-                onChange={() => setagregaNombreEdad(true)}
+                onChange={() => setagregaNombreEdad(false)}
                 className="w-4 h-4 text-pink-600 focus:ring-[#f57fa6] cursor-pointer"
                 />
                 <span className="text-gray-700 group-hover:text-gray-900 transition-colors">Sí</span>
@@ -363,6 +368,20 @@
             {nombre.includes('lunchcake') && <option value="Delivery">Delivery</option>}
             </select>
         </div>
+
+        {/* Campo hora de retiro (solo si es Retiro en domicilio) */}
+        {metodoEnvio === "Retiro en domicilio" && (
+            <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">Hora de retiro</label>
+                <input
+                    type="time"
+                    value={horaRetiro}
+                    onChange={(e) => setHoraRetiro(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none"
+                />
+            </div>
+        )}
 
         {/* Botón agregar al carrito / actualizar producto */}
 

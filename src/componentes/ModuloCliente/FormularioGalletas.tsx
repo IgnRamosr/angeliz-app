@@ -31,6 +31,7 @@
     const [detalleGalletas, setDetalleGalletas] = useState<string | undefined>('');
     const [rutaImagenReferencia, setRutaImagenReferencia] = useState<string | undefined>('');
     const [metodoEnvio, setMetodoEnvio] = useState<string>("Retiro en domicilio");
+    const [horaRetiro, setHoraRetiro] = useState<string>('');
 
     const [esconder, setEsconder] = useState<boolean>(false);
 
@@ -47,6 +48,7 @@
         setCantidad(atributosAcambiar.cantidad);
         setImagenReferencia(null);
         setVistaPreviaImagen(null);
+        setHoraRetiro(atributosAcambiar.hora_retiro ?? '');
 
     }, [atributosAcambiar]);
 
@@ -54,9 +56,10 @@
     const isFormComplete = useMemo(() => {
         const tieneCantidad = cantidad! > 0;
         const tieneFecha = fechaEntrega instanceof Date && !isNaN(fechaEntrega.getTime());
-        const tieneMetodo = typeof metodoEnvio === "string" && metodoEnvio.trim().length > 0;
-        return tieneCantidad && tieneFecha && tieneMetodo;
-    }, [cantidad, fechaEntrega, metodoEnvio]);
+        const tieneMetodo = metodoEnvio.trim().length > 0;
+        const tieneHoraRetiro = metodoEnvio !== "Retiro en domicilio" || horaRetiro.trim().length > 0;
+        return tieneCantidad && tieneFecha && tieneMetodo && tieneHoraRetiro;       
+    }, [cantidad, fechaEntrega, metodoEnvio, horaRetiro]);
 
 
     const validarImagen = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,8 +130,6 @@
             rutaArchivo = await subirImagenReferenciaSupabase(imagenReferencia, sesion?.user.id, tipo_formulario);
         }
 
-        //Agregar atributo cantidad
-
         const item = {
             uid,
             user_id: sesion?.user.id,
@@ -139,7 +140,8 @@
             imagen_url: imagenURL,
             producto_id: id,
             tipo_formulario,
-            cantidad: cantidad ?? 1
+            cantidad: cantidad ?? 1,
+            hora_retiro: metodoEnvio === "Retiro en domicilio" ? horaRetiro : undefined,
         };
 
 
@@ -175,7 +177,8 @@
             imagen_url: imagenURL,
             producto_id: id,
             tipo_formulario,
-            cantidad: cantidad ?? 1
+            cantidad: cantidad ?? 1,
+            hora_retiro: metodoEnvio === "Retiro en domicilio" ? horaRetiro : undefined,
         };
 
         await agregarProductoCarrito(item);
@@ -293,6 +296,20 @@
             <option value="Metro">Metro</option>
             </select>
         </div>
+
+        {/* Campo hora de retiro (solo si es Retiro en domicilio) */}
+        {metodoEnvio === "Retiro en domicilio" && (
+            <div className="space-y-2">
+                <label className="block text-sm font-semibold text-gray-700">Hora de retiro</label>
+                <input
+                    type="time"
+                    value={horaRetiro}
+                    onChange={(e) => setHoraRetiro(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none"
+                />
+            </div>
+        )}
 
         {/* Botón agregar al carrito / actualizar producto */}
 

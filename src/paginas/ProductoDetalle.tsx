@@ -2,6 +2,8 @@ import { useParams } from "react-router-dom"
 import { useProduct } from "../hooks/useProducts";
 import { FormularioTorta } from "../componentes/ModuloCliente/FormulariosTortas";
 import { FormularioGalletas } from "../componentes/ModuloCliente/FormularioGalletas";
+import { CarruselImagenesProducto } from "../componentes/ModuloCliente/CarruselImagenesProducto";
+import { FormularioMiniCake } from "../componentes/ModuloCliente/FormularioMiniCake";
 
 export const ProductoDetalle = () => {
     const {id} = useParams();
@@ -16,13 +18,10 @@ export const ProductoDetalle = () => {
                     {/* Sección de Imagen y Descripción */}
                     <div className="space-y-6">
                         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-                            <div className="aspect-square w-full relative">
-                                <img 
-                                    src={producto?.imagenes_producto?.[0]?.url} 
-                                    alt={producto?.nombre} 
-                                    className="w-full h-full object-cover"
-                                />
-                            </div>
+                            <CarruselImagenesProducto
+                                imagenes={producto?.imagenes_producto ?? []}
+                                nombre={producto?.nombre ?? ""}
+                            />
                             <div className="p-6 lg:p-8">
                                 <h1 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
                                     {producto?.nombre}
@@ -30,6 +29,15 @@ export const ProductoDetalle = () => {
                                 <p className="text-gray-600 text-lg leading-relaxed">
                                     {producto?.descripcion}
                                 </p>
+
+                            {(producto?.nombre.toLocaleLowerCase().includes('crea') || producto?.nombre.toLocaleLowerCase().includes('minicake')) && (
+                                <div className="flex items-start gap-2 mt-4 bg-pink-50 border border-pink-200 rounded-lg px-4 py-3">
+                                    <span className="text-pink-400 text-lg leading-none mt-0.5">✦</span>
+                                    <p className="text-sm text-pink-700">
+                                        El precio de este producto puede variar según el diseño y la complejidad de la decoración solicitada.
+                                    </p>
+                                </div>
+                            )}
                             </div>
                         </div>
                     </div>
@@ -42,6 +50,9 @@ export const ProductoDetalle = () => {
                         {producto?.tipo_formulario == 'galletas' && (
                             <FormularioGalletas id={productoId} nombre={producto.nombre} imagenes_producto={producto.imagenes_producto} tipo_formulario={producto.tipo_formulario} />
                         )}
+                        {producto?.tipo_formulario == 'minicake' && (
+                            <FormularioMiniCake id={productoId} nombre={producto.nombre} imagenes_producto={producto.imagenes_producto} sabor_producto={producto.sabor_producto} tipo_formulario={producto.tipo_formulario} />
+                        )}                    
                     </div>
                 </div>
             </div>

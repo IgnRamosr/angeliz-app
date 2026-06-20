@@ -1,8 +1,26 @@
 // src/componentes/PedidosAdminTabla.tsx
 import { usePedidosAdmin } from "../../hooks/usePedidosAdmin";
-import type { PedidoResumen } from "../../assets/types-interfaces/types";
+import type { EstadoPedido, PedidoResumen } from "../../assets/types-interfaces/types";
 import { Link } from "react-router-dom";
-import { Calendar, User, Phone, FileText, Loader2, Package, Search, ArrowUpDown } from "lucide-react";
+import { Calendar, User, Phone, FileText, Loader2, Package, Search, ArrowUpDown, Tag } from "lucide-react";
+
+const ESTADO_ESTILOS: Record<EstadoPedido, string> = {
+  "En revisión":  "bg-amber-100 text-amber-800 border border-amber-300",
+  "Contactado":   "bg-blue-100 text-blue-800 border border-blue-300",
+  "Confirmado":   "bg-green-100 text-green-800 border border-green-300",
+  "En camino":    "bg-indigo-100 text-indigo-800 border border-indigo-300",
+  "Entregado":    "bg-emerald-100 text-emerald-800 border border-emerald-300",
+  "Cancelado":    "bg-red-100 text-red-800 border border-red-300",
+};
+
+function BadgeEstado({ estado }: { estado: EstadoPedido | null }) {
+  if (!estado) return <span className="text-gray-400 text-sm">—</span>;
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${ESTADO_ESTILOS[estado] ?? "bg-gray-100 text-gray-700"}`}>
+      {estado}
+    </span>
+  );
+}
 import { useMemo, useState } from "react";
 
 // utils que ya tienes
@@ -65,11 +83,15 @@ const pedidosFiltrados = useMemo(() => {
 
       // 2) Adaptamos a lo que espera el builder (nombre_producto, tamano, sabor_nombre, fecha_entrega, metodo_envio)
       const itemsAdaptados = (rawItems ?? []).map((r: any) => ({
-        nombre_producto: r.nombre_producto ?? r.producto_nombre ?? r.nombre ?? "Producto",
-        tamano: r.tamano ?? r.tamano_personas ?? null,
-        sabor_nombre: r.sabor_nombre ?? r.sabor ?? null,
-        fecha_entrega: r.fecha_entrega ?? null,
-        metodo_envio: r.metodo_envio ?? null,
+          nombre_producto:        r.nombre_producto        ?? "Producto",
+          tipo_formulario:        r.tipo_formulario         ?? null,
+          tamano:                 r.tamano                  ?? null,
+          cantidad:               r.cantidad                ?? null,
+          sabor_nombre:           r.sabor_nombre            ?? null,
+          fecha_entrega:          r.fecha_entrega           ?? null,
+          metodo_envio:           r.metodo_envio            ?? null,
+          detalle:                r.detalle                 ?? null,
+          ruta_imagen_referencia: r.ruta_imagen_referencia  ?? null,
       }));
 
       // 3) Armamos el payload que pide buildWhatsAppHrefFromPedido
@@ -198,6 +220,7 @@ const pedidosFiltrados = useMemo(() => {
                   </div>
                   Pedido #{p.id}
                 </Link>
+                <BadgeEstado estado={p.estado} />
               </div>
 
               <div className="space-y-3">
@@ -297,6 +320,12 @@ const pedidosFiltrados = useMemo(() => {
                       <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Teléfono</span>
                     </div>
                   </th>
+                  <th className="px-6 py-4 text-left">
+                    <div className="flex items-center gap-2">
+                      <Tag className="w-4 h-4 text-orange-500" />
+                      <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Estado</span>
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -343,6 +372,9 @@ const pedidosFiltrados = useMemo(() => {
                       ) : (
                         <span className="text-gray-400">—</span>
                       )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <BadgeEstado estado={p.estado} />
                     </td>
                   </tr>
                 ))}

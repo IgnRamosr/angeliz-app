@@ -11,6 +11,7 @@
     "postinstall": "flowbite-react patch"
   },
   "dependencies": {
+    "@emailjs/browser": "^4.4.1",
     "@supabase/supabase-js": "^2.49.8",
     "@tailwindcss/vite": "^4.1.7",
     "@vercel/analytics": "^1.5.0",

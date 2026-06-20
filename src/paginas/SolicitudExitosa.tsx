@@ -6,22 +6,19 @@ export const AgradecimientoPostCompra = () => {
 
 const redirigir = useNavigate();
 
-const [segundosRestantes, setSegundosRestantes] = useState<number>(15);
+const [segundosRestantes, setSegundosRestantes] = useState<number>(20);
 
 useEffect(() => {
-const intervalo = setInterval(() => {
-    setSegundosRestantes((prev) => {
-        if (prev <= 1) {
-            clearInterval(intervalo);
-            redirigir("/");
-            return 0;
-        }
-        return prev - 1;
-    });
-}, 1000);
+    const intervalo = setInterval(() => {
+        setSegundosRestantes((prev) => (prev <= 1 ? 0 : prev - 1));
+    }, 1000);
 
-return () => clearInterval(intervalo);
-}, [])
+    return () => clearInterval(intervalo);
+}, []);
+
+useEffect(() => {
+    if (segundosRestantes === 0) redirigir("/");
+}, [segundosRestantes]);
 
 return (
 <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-purple-50 flex items-center justify-center px-4 py-8">
@@ -46,7 +43,7 @@ return (
             {/* Mensaje principal */}
             <div className="mb-6">
                 <p className="text-gray-600 text-base sm:text-lg leading-relaxed mb-4">
-                    Tu solicitud ha sido guardada exitosamente. Te contactaremos dentro de un tiempo a través de WhatsApp.
+                    ¡Tu pedido está casi listo! Solo falta un último paso: nos pondremos en contacto contigo por WhatsApp para confirmar los detalles y finalizar la solicitud.
                 </p>
 
                 {/* Ícono de WhatsApp */}

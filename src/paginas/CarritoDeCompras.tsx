@@ -5,12 +5,12 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "../componentes/Navegacion/useCart";
 import { generaSolicitud } from "../hooks/useCheckoutFunction";
 import { toast } from "react-toastify";
-import { Cake, Calendar, Edit3, ShoppingBag, Trash2, Users, Stars } from "lucide-react";
+import { Cake, Calendar, Edit3, ShoppingBag, Trash2, Users, Stars, ChevronDown, ChevronUp, Package, Clock } from "lucide-react";
 import { useRef } from "react";
 import  FormularioContacto, {type FormularioContactoRef}  from "../componentes/ModuloCliente/FormularioContacto";
 import { supabase } from "../supabase/supabaseClient";
 import type { datosFormContacto } from '../assets/types-interfaces/interfaces';
-import { eliminarImagenReferenciaSupabase } from "../hooks/useUploadImageSupabase";
+import { eliminarImagenReferenciaSupabase, importarImagenReferenciaPorRuta  } from "../hooks/useUploadImageSupabase";
 
 
 
@@ -20,6 +20,8 @@ export const CarritoDeCompras = () => {
   const [ items , setItems] = useState<CarritoItem[]>([]);
   const [sesion, setSession] = useState<boolean>();
   const [loading, setLoading] = useState(true);
+  const [detalleAbierto, setDetalleAbierto] = useState<string | null>(null);
+  const [confirmando, setConfirmando] = useState(false);
   const {eliminarItem} = useCart();
   const redirigir = useNavigate();
 
@@ -30,25 +32,29 @@ export const CarritoDeCompras = () => {
   
 
   const manejarConfirmacion = async () => {
-    try {
-      let datos: datosFormContacto | undefined = undefined;
-
-      if (sesion) { // sesion === true => anónimo según tu código
-        const res = refContacto.current?.getdatosFormContacto();
-        if (!res) return; // el componente ya mostró los mensajes de error
-        datos = res;
+      if (confirmando) return;
+      setConfirmando(true);
+      try {
+          let datos: datosFormContacto | undefined = undefined;
+          if (sesion) {
+              const res = refContacto.current?.getdatosFormContacto();
+              if (!res) {
+                  setConfirmando(false);
+                  return;
+              }
+              datos = res;
+          }
+          await generaSolicitud(items, datos);
+          vaciarCarrito();
+          vaciarProductosCarrito();
+          redirigir("/solicitudExitosa");
+      } catch (e) {
+          console.error(e);
+          toast.clearWaitingQueue();
+          toast.error("Ocurrió un error al generar la solicitud");
+          setConfirmando(false);
+          redirigir("/");
       }
-
-      await generaSolicitud(items, datos);
-      vaciarCarrito();
-      vaciarProductosCarrito();
-      redirigir("/solicitudExitosa");
-    } catch (e) {
-      console.error(e);
-      toast.clearWaitingQueue();
-      toast.error("Ocurrió un error al generar la solicitud");
-      redirigir("/");
-    }
   };
 
 
@@ -94,7 +100,8 @@ export const CarritoDeCompras = () => {
       fecha_entrega: itemAEditar.fecha_entrega,
       metodo_envio: itemAEditar.metodo_envio,
       agregaNombreEdad: itemAEditar.agregaNombreEdad,
-      cantidad: itemAEditar.cantidad
+      cantidad: itemAEditar.cantidad,
+      hora_retiro: itemAEditar.hora_retiro
     };
 
     redirigir(`/producto/${item.producto_id}?editar=${item.uid}`, { state: { atributosAcambiar } });
@@ -163,26 +170,93 @@ export const CarritoDeCompras = () => {
                     </h3>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm text-gray-600">
-                      <div className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-[#f57fa6]" />
-                        <span><strong>Personas:</strong> {item.tamano} personas</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Cake className="w-4 h-4 text-[#f57fa6]" />
-                        <span><strong>Sabor:</strong> {item.sabor_nombre}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-[#f57fa6]" />
-                        <span><strong>Entrega:</strong> {new Date(item.fecha_entrega).toLocaleDateString('es-CL')}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2">
-                        <Stars className="w-4 h-4 text-[#f57fa6]"/>
-                        <span><strong>Agrega nombre y/o edad:</strong> {item.agregaNombreEdad == null ? "—" : item.agregaNombreEdad ? "Sí" : "No"}</span>
-                      </div>
+
+                        {/* Campos torta y minicake */}
+                        {(item.tipo_formulario === 'torta' || item.tipo_formulario === 'minicake') && (
+                            <div className="flex items-center gap-2">
+                                <Cake className="w-4 h-4 text-[#f57fa6]" />
+                                <span><strong>Sabor:</strong> {item.sabor_nombre}</span>
+                            </div>
+                        )}
+
+                        {/* Personas — solo torta */}
+                        {item.tipo_formulario === 'torta' && (
+                            <div className="flex items-center gap-2">
+                                <Users className="w-4 h-4 text-[#f57fa6]" />
+                                <span>
+                                    <strong>Personas:</strong> {item.tamano} {item.tamano === 1 ? 'persona' : 'personas'}
+                                </span>
+                            </div>
+                        )}
+
+                        {/* Cantidad — solo galletas */}
+                        {item.tipo_formulario === 'galletas' && (
+                            <div className="flex items-center gap-2">
+                                <Package className="w-4 h-4 text-[#f57fa6]" />
+                                <span><strong>Cantidad:</strong> {item.cantidad}</span>
+                            </div>
+                        )}
+
+                        {/* Fecha entrega — todos */}
+                        <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-[#f57fa6]" />
+                            <span><strong>Entrega:</strong> {item.fecha_entrega.split('T')[0].split('-').reverse().join('/')}</span>
+                        </div>
+
+                        {/* Hora retiro — todos, solo si existe */}
+                        {item.hora_retiro && (
+                            <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4 text-[#f57fa6]" />
+                                <span><strong>Hora retiro:</strong> {item.hora_retiro}</span>
+                            </div>
+                        )}
+
+                        {/* Nombre/edad — solo torta */}
+                        {item.tipo_formulario === 'torta' && (
+                            <div className="flex items-center gap-2">
+                                <Stars className="w-4 h-4 text-[#f57fa6]" />
+                                <span><strong>Agrega nombre y/o edad:</strong> {item.agregaNombreEdad == null ? "—" : item.agregaNombreEdad ? "Sí" : "No"}</span>
+                            </div>
+                        )}
+
                     </div>
+
+                    {/* Sección expandible de detalle — solo si contiene 'crea' o 'minicake' */}
+                    {(item.nombre_producto.toLocaleLowerCase().includes('crea') || item.nombre_producto.toLocaleLowerCase().includes('minicake')) && (
+                        <div className="mt-3">
+                            <button
+                                onClick={() => setDetalleAbierto(detalleAbierto === item.uid ? null : item.uid)}
+                                className="flex items-center gap-1 text-sm font-semibold text-pink-500 hover:text-pink-700 transition-colors"
+                            >
+                                {detalleAbierto === item.uid ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                                {detalleAbierto === item.uid ? 'Ocultar detalle' : 'Ver detalle del pedido'}
+                            </button>
+
+                            {detalleAbierto === item.uid && (
+                                <div className="mt-3 p-4 bg-pink-50 border border-pink-100 rounded-xl space-y-3">
+                                    {item.detalle && (
+                                        <div>
+                                            <p className="text-xs font-semibold text-gray-500 uppercase mb-1">Detalle</p>
+                                            <p className="text-sm text-gray-700">{item.detalle}</p>
+                                        </div>
+                                    )}
+                                    {item.ruta_imagen_referencia && (
+                                        <div>
+                                            <p className="text-xs font-semibold text-gray-500 uppercase mb-2">Imagen de referencia</p>
+                                            <img
+                                                src={importarImagenReferenciaPorRuta(item.ruta_imagen_referencia, item.tipo_formulario)}
+                                                alt="Imagen de referencia"
+                                                className="w-40 h-40 object-cover rounded-lg border border-pink-200"
+                                            />
+                                        </div>
+                                    )}
+                                    {!item.detalle && !item.ruta_imagen_referencia && (
+                                        <p className="text-sm text-gray-400">No se agregó detalle ni imagen de referencia.</p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
                   </div>
 
                   {/* Botones */}
@@ -215,11 +289,12 @@ export const CarritoDeCompras = () => {
 
         {/* Botón de Confirmación */}
         <div className="sticky bottom-4 bg-white rounded-2xl shadow-2xl p-4 sm:p-6">
-          <button 
-            onClick={manejarConfirmacion}
-            className="w-full bg-[#6F2521] hover:bg-[#C9A742] text-white py-4 rounded-xl font-bold text-lg hover:shadow-2xl transition-all duration-300 hover:cursor-pointer transform hover:-translate-y-1 hover:scale-[1.02]"
+          <button
+              onClick={manejarConfirmacion}
+              disabled={confirmando}
+              className="w-full bg-[#6F2521] hover:bg-[#C9A742] text-white py-4 rounded-xl font-bold text-lg hover:shadow-2xl transition-all duration-300 hover:cursor-pointer transform hover:-translate-y-1 hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:translate-y-0"
           >
-            Confirmar Pedido
+              {confirmando ? "Confirmando pedido..." : "Confirmar Pedido"}
           </button>
           <p className="text-center text-xs text-gray-500 mt-3">
             Al confirmar, enviarás tu solicitud de pedido

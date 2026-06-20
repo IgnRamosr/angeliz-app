@@ -1,7 +1,7 @@
 //Funciones para traer los pedidos y detalle de pedidos de los usuarios
 
 
-import type { PedidoConItems } from "../assets/types-interfaces/types";
+import type { EstadoPedido, PedidoConItems } from "../assets/types-interfaces/types";
 import { supabase } from "../supabase/supabaseClient";
 
 
@@ -14,12 +14,13 @@ export async function listarPedidosUsuario(): Promise<PedidoConItems[]>{
 
 const {data, error} = await supabase.from("pedidos")
     .select(`
-        id, usuario_id, fecha_solicitud,
+        id, usuario_id, fecha_solicitud, estado,
         items_pedido(
             id, producto_id, subtotal,
             nombre:productos(nombre),
-            formulario_torta(id, item_pedido_id, tamano:tamano_producto(tamano), sabor_nombre:sabores(nombre), fecha_entrega, agregar_nombre_edad, metodo_envio, ruta_imagen_referencia, detalle),
-            formulario_galletas(id, item_pedido_id, cantidad, ruta_imagen_referencia, detalle, fecha_entrega, metodo_envio)
+            formulario_torta(id, item_pedido_id, tamano:tamano_producto(tamano), sabor_nombre:sabores(nombre), fecha_entrega, agregar_nombre_edad, metodo_envio, ruta_imagen_referencia, detalle, hora_retiro),
+            formulario_galletas(id, item_pedido_id, cantidad, ruta_imagen_referencia, detalle, fecha_entrega, metodo_envio, hora_retiro),
+            formulario_minicake(id, item_pedido_id, sabor_nombre:sabores(nombre), fecha_entrega, metodo_envio, ruta_imagen_referencia, detalle, hora_retiro)
         )
     `)
     .eq("usuario_id", user.id)
@@ -60,8 +61,10 @@ const cabecera = filas[0]
         cliente_nombre: filas[0].cliente_nombre,
         cliente_apellido: filas[0].cliente_apellido,
         cliente_telefono: filas[0].cliente_telefono,
+        estado: filas[0].estado as EstadoPedido | null,
     }
     : null;
+
 
 // Ítems (si no hay ítems, queda arreglo vacío)
 const items = filas
@@ -80,8 +83,19 @@ const items = filas
     metodo_envio: f.metodo_envio,
     ruta_imagen_referencia: f.ruta_imagen_referencia,
     detalle: f.detalle,
-    detalle_galletas: f.detalle_galletas
+    detalle_galletas: f.detalle_galletas,
+    detalle_minicake: f.detalle_minicake,
+    hora_retiro: f.hora_retiro,
     }));
 
 return { cabecera, items };
+}
+
+export async function actualizarEstadoPedido(pedidoId: number, nuevoEstado: EstadoPedido): Promise<void> {
+    const { error } = await supabase
+        .from("pedidos")
+        .update({ estado: nuevoEstado })
+        .eq("id", pedidoId);
+
+    if (error) throw error;
 }

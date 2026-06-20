@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { listarPedidosUsuario } from "../hooks/useOrders";
-import type { PedidoConItems } from "../assets/types-interfaces/types";
+import type { PedidoConItems, EstadoPedido } from "../assets/types-interfaces/types";
 import {
   Package, Calendar, Cake, Users, Truck,
   Clock, ChevronDown, ChevronUp, Cookie, ImageIcon, X,
@@ -10,6 +10,27 @@ import { useUserRole } from "../hooks/useUserProfile";
 import { formatearFechaHoraCorta } from "../utils/fechas";
 import { importarImagenReferenciaPorRuta } from "../hooks/useUploadImageSupabase";
 import { createPortal } from "react-dom";
+
+
+const CONFIG_ESTADO: Record<EstadoPedido, { label: string; clases: string; dot: string }> = {
+    "En revisión": { label: "En revisión", clases: "bg-gray-100 text-gray-600",     dot: "bg-gray-400"   },
+    "Contactado":  { label: "Contactado",  clases: "bg-blue-100 text-blue-700",     dot: "bg-blue-500"   },
+    "Confirmado":  { label: "Confirmado",  clases: "bg-yellow-100 text-yellow-700", dot: "bg-yellow-500" },
+    "En camino":   { label: "En camino",   clases: "bg-purple-100 text-purple-700", dot: "bg-purple-500" },
+    "Entregado":   { label: "Entregado",   clases: "bg-green-100 text-green-700",   dot: "bg-green-500"  },
+    "Cancelado": { label: "Cancelado", clases: "bg-red-100 text-red-700", dot: "bg-red-500" },
+};
+
+const BadgeEstado = ({ estado }: { estado: EstadoPedido | null }) => {
+    if (!estado) return null;
+    const { label, clases, dot } = CONFIG_ESTADO[estado] ?? CONFIG_ESTADO["En revisión"];
+    return (
+        <span className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${clases}`}>
+            <span className={`w-1.5 h-1.5 rounded-full ${dot}`} />
+            {label}
+        </span>
+    );
+};
 
 // ── Modal de imagen ──────────────────────────────────────────────────────────
 
@@ -65,23 +86,52 @@ const BotonVerImagen = ({ ruta, bucket }: { ruta: string; bucket: string }) => {
   );
 };
 
-// ── Subcomponente: detalle de torta ──────────────────────────────────────────
-const DetalleTorta = ({ ft, nombre }: { ft: NonNullable<any>; nombre: string }) => {
-  const rows = [
-    { icon: <Users    className="w-4 h-4 text-purple-600" />, bg: "bg-purple-100", label: "Personas", value: ft.tamano?.tamano      ?? "—" },
-    { icon: <Cake     className="w-4 h-4 text-pink-600"   />, bg: "bg-pink-100",   label: "Sabor",    value: ft.sabor_nombre?.nombre ?? "—" },
-    { icon: <Calendar className="w-4 h-4 text-blue-600"   />, bg: "bg-blue-100",   label: "Entrega",  value: ft.fecha_entrega         ?? "—" },
-    { icon: <Truck    className="w-4 h-4 text-green-600"  />, bg: "bg-green-100",  label: "Envío",    value: ft.metodo_envio           ?? "—" },
-  ];
+// ── Subcomponente: detalle de minicake ──────────────────────────────────────────
 
-  return (
-    <>
-      <DetalleGrid rows={rows} />
-      {nombre.toLowerCase().includes("crea") && ft.ruta_imagen_referencia && (
-        <BotonVerImagen ruta={ft.ruta_imagen_referencia} bucket="torta" />
-      )}
-    </>
-  );
+const DetalleMiniCake = ({ fm, nombre }: { fm: NonNullable<any>; nombre: string }) => {
+    const rows = [
+        { icon: <Cake     className="w-4 h-4 text-pink-600"  />, bg: "bg-pink-100",  label: "Sabor",   value: fm.sabor_nombre?.nombre ?? "—" },
+        { icon: <Calendar className="w-4 h-4 text-blue-600"  />, bg: "bg-blue-100",  label: "Entrega", value: fm.fecha_entrega          ?? "—" },
+        { icon: <Truck    className="w-4 h-4 text-green-600" />, bg: "bg-green-100", label: "Envío",   value: fm.metodo_envio            ?? "—" },
+    ];
+
+    return (
+        <>
+            <DetalleGrid rows={rows} />
+            {fm.detalle && (
+                <div className="bg-white rounded-lg p-3 shadow-sm mt-2">
+                    <span className="font-semibold text-gray-700 text-xs sm:text-sm block mb-1">Detalle</span>
+                    <p className="text-gray-600 text-sm whitespace-pre-wrap">{fm.detalle}</p>
+                </div>
+            )}
+            {(nombre.toLowerCase().includes('crea') || nombre.toLowerCase().includes('minicake')) && fm.ruta_imagen_referencia && (
+                <BotonVerImagen ruta={fm.ruta_imagen_referencia} bucket="minicake" />
+            )}
+        </>
+    );
+};
+// ── Subcomponente: detalle de torta ──────────────────────────────────────────
+const DetalleTorta = ({ ft, nombre, mostrarTamano = true, bucket = "torta" }: { 
+    ft: NonNullable<any>; 
+    nombre: string; 
+    mostrarTamano?: boolean;
+    bucket?: string;
+}) => {
+    const rows = [
+        ...(mostrarTamano ? [{ icon: <Users className="w-4 h-4 text-purple-600" />, bg: "bg-purple-100", label: "Personas", value: ft.tamano?.tamano ?? "—" }] : []),
+        { icon: <Cake     className="w-4 h-4 text-pink-600"  />, bg: "bg-pink-100",  label: "Sabor",   value: ft.sabor_nombre?.nombre ?? "—" },
+        { icon: <Calendar className="w-4 h-4 text-blue-600"  />, bg: "bg-blue-100",  label: "Entrega", value: ft.fecha_entrega          ?? "—" },
+        { icon: <Truck    className="w-4 h-4 text-green-600" />, bg: "bg-green-100", label: "Envío",   value: ft.metodo_envio            ?? "—" },
+    ];
+
+    return (
+        <>
+            <DetalleGrid rows={rows} />
+            {(nombre.toLowerCase().includes('crea') || nombre.toLowerCase().includes('minicake')) && ft.ruta_imagen_referencia && (
+                <BotonVerImagen ruta={ft.ruta_imagen_referencia} bucket={bucket} />
+            )}
+        </>
+    );
 };
 
 // ── Subcomponente: detalle de galletas ───────────────────────────────────────
@@ -220,6 +270,7 @@ export const MisPedidos = () => {
                         <div className="bg-gradient-to-br from-pink-500 to-purple-500 text-white px-4 py-1.5 rounded-full text-sm font-bold shadow-md">
                           Pedido #{pedido.id}
                         </div>
+                          <BadgeEstado estado={pedido.estado} />
                         <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${isOpen ? "bg-pink-100 text-pink-700" : "bg-gray-100 text-gray-600"}`}>
                           <Cake className="w-3.5 h-3.5" />
                           {pedido.items_pedido.length} {pedido.items_pedido.length === 1 ? "producto" : "productos"}
@@ -244,9 +295,14 @@ export const MisPedidos = () => {
                   <div className="px-4 sm:px-6 pb-6 pt-2">
                     <div className="border-t-2 border-dashed border-gray-200 pt-4 space-y-4">
                       {pedido.items_pedido.map((it, index) => {
-                        const esGalleta = it.nombre.nombre.includes("galletas");
-                        const nombre    = it.nombre?.nombre ?? "Sin nombre";
-                        const Icon      = esGalleta ? Cookie : Cake;
+                      const ft = it.formulario_torta as any ?? null;
+                      const fg = it.formulario_galletas as any ?? null;
+                      const fm = it.formulario_minicake as any ?? null;
+
+                      const esGalleta  = fg !== null;
+                      const esMiniCake = fm !== null;
+                      const nombre     = it.nombre?.nombre ?? "Sin nombre";
+                      const Icon       = esGalleta ? Cookie : Cake;
 
                         return (
                           <div
@@ -263,8 +319,12 @@ export const MisPedidos = () => {
                                 <span className="break-words">{nombre}</span>
                               </h4>
                               <div className="flex items-center gap-2 ml-2 flex-shrink-0">
-                                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${esGalleta ? "bg-yellow-100 text-yellow-700" : "bg-pink-100 text-pink-700"}`}>
-                                  {esGalleta ? "Galletas" : "Torta"}
+                                <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                    esGalleta  ? "bg-yellow-100 text-yellow-700" :
+                                    esMiniCake ? "bg-purple-100 text-purple-700" :
+                                                "bg-pink-100 text-pink-700"
+                                }`}>
+                                    {esGalleta ? "Galletas" : esMiniCake ? "Mini cake" : "Torta"}
                                 </span>
                                 <div className="bg-white px-3 py-1 rounded-full text-xs font-semibold text-purple-600 shadow-sm">
                                   #{index + 1}
@@ -274,8 +334,10 @@ export const MisPedidos = () => {
 
                             {/* Detalles según tipo */}
                             {esGalleta
-                              ? <DetalleGalletas fg={it.formulario_galletas} nombre={it.nombre.nombre} />
-                              : <DetalleTorta    ft={it.formulario_torta} nombre={it.nombre.nombre}    />
+                                ? <DetalleGalletas fg={fg} nombre={nombre} />
+                                : esMiniCake
+                                    ? <DetalleMiniCake fm={fm} nombre={nombre} />
+                                    : ft && <DetalleTorta ft={ft} nombre={nombre} mostrarTamano={true} />
                             }
                           </div>
                         );

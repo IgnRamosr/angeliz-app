@@ -1,7 +1,8 @@
 // pages/AdminPedidoDetalle.tsx
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
-import { obtenerPedidoDetalleAdmin } from "../../hooks/useOrders";
+import { actualizarEstadoPedido, obtenerPedidoDetalleAdmin } from "../../hooks/useOrders";
+import type { EstadoPedido } from "../../assets/types-interfaces/types";
 import {
   ArrowLeft,
   Loader2,
@@ -17,11 +18,25 @@ import {
   Eye,
   AlbumIcon,
   Cookie,
+  CheckCircle2,
 } from "lucide-react";
 
+const ESTADOS: EstadoPedido[] = ["En revisión", "Contactado", "Confirmado", "En camino", "Entregado", "Cancelado"];
+
+const ESTADO_ESTILOS: Record<EstadoPedido, string> = {
+  "En revisión":  "bg-amber-100 text-amber-800 border-amber-300",
+  "Contactado":   "bg-blue-100 text-blue-800 border-blue-300",
+  "Confirmado":   "bg-green-100 text-green-800 border-green-300",
+  "En camino":    "bg-indigo-100 text-indigo-800 border-indigo-300",
+  "Entregado":    "bg-emerald-100 text-emerald-800 border-emerald-300",
+  "Cancelado":    "bg-red-100 text-red-800 border-red-300",
+};
+
 // ⬇️ Reutilizamos tus utilidades
-import { buildWhatsAppHrefFromPedido, openWhatsApp } from "../../utils/whatsapp";
+import { buildWhatsAppHrefFromPedido, fmtFecha, openWhatsApp } from "../../utils/whatsapp";
 import { importarImagenReferenciaPorRuta } from "../../hooks/useUploadImageSupabase";
+import { ymd } from "../../utils/fechas";
+import { supabase } from "../../supabase/supabaseClient";
 
 export default function AdminPedidoDetalle() {
   const { id } = useParams();
@@ -33,6 +48,9 @@ export default function AdminPedidoDetalle() {
   const [error, setError] = useState<string | null>(null);
   const [imagenAbierta, setImagenAbierta] = useState<string | null>(null);
   const [detalleAbierto, setDetalleAbierto] = useState<string | null>(null);
+  const [estado, setEstado] = useState<EstadoPedido | null>(null);
+  const [guardandoEstado, setGuardandoEstado] = useState(false);
+  const [estadoGuardado, setEstadoGuardado] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -40,6 +58,7 @@ export default function AdminPedidoDetalle() {
         const { cabecera, items } = await obtenerPedidoDetalleAdmin(pedidoId);
         setCabecera(cabecera);
         setItems(items);
+        setEstado(cabecera?.estado ?? null);
       } catch (e: any) {
         setError(e?.message ?? "Error cargando detalle");
       } finally {
@@ -48,20 +67,44 @@ export default function AdminPedidoDetalle() {
     })();
   }, [pedidoId]);
 
+  async function handleGuardarEstado() {
+    if (!estado) return;
+    setGuardandoEstado(true);
+    try {
+      await actualizarEstadoPedido(pedidoId, estado);
+
+      supabase.functions.invoke("enviar-email-estado", {
+        body: { pedidoId, nuevoEstado: estado },
+      }).catch((e) => console.warn("No se pudo enviar correo:", e?.message));
+
+      setEstadoGuardado(true);
+      setTimeout(() => setEstadoGuardado(false), 3000);
+    } catch (e) {
+      console.error("Error al actualizar estado:", e);
+    } finally {
+      setGuardandoEstado(false);
+    }
+  }
+
   // Construimos el href de WhatsApp a partir de la cabecera + items ya cargados
   const waHref = useMemo(() => {
     if (!cabecera) return null;
 
     // Adaptamos los items a las claves que espera buildWhatsAppHrefFromPedido
     const itemsAdaptados = (items ?? []).map((it) => ({
-      nombre_producto: it.producto_nombre ?? "Producto",
-      tamano: it.tamano_personas ?? null,
-      sabor_nombre: it.sabor_nombre ?? null,
-      fecha_entrega: it.fecha_entrega ?? null,
-      metodo_envio: it.metodo_envio ?? null,
-      ruta_imagen_referencia: it.ruta_imagen_referencia ?? null,
-      detalle_torta: it.detalle_torta ?? null
+        nombre_producto: it.producto_nombre ?? "Producto",
+        tipo_formulario: it.tipo_formulario ?? null,
+        tamano: it.tamano_personas ?? null,
+        sabor_nombre: it.sabor_nombre ?? null,
+        fecha_entrega: it.fecha_entrega ?? null,
+        metodo_envio: it.metodo_envio ?? null,
+        ruta_imagen_referencia: it.ruta_imagen_referencia ?? null,
+        detalle: it.detalle ?? it.detalle_minicake ?? it.detalle_galletas ?? null,
+        hora_retiro: it.hora_retiro ?? null,  
+        agregar_nombre_edad: it.agregar_nombre_edad ?? null,
+        cantidad: it.cantidad ?? null
     }));
+
 
     return buildWhatsAppHrefFromPedido({
       id: cabecera.pedido_id,
@@ -157,7 +200,7 @@ export default function AdminPedidoDetalle() {
               <div className="flex items-center gap-3">
                 <span className="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-lg text-white font-medium text-sm w-fit">
                   <Calendar className="w-4 h-4" />
-                  {new Date(cabecera.fecha_solicitud).toLocaleDateString("es-CL")}
+                  {ymd(new Date(/Z|[+-]\d{2}:\d{2}$/.test(cabecera.fecha_solicitud) ? cabecera.fecha_solicitud : cabecera.fecha_solicitud + "Z"))}
                 </span>
 
                 {/* Botón directo a WhatsApp (opcional extra) */}
@@ -171,6 +214,35 @@ export default function AdminPedidoDetalle() {
                   WhatsApp
                 </button>
               </div>
+            </div>
+          </div>
+
+          {/* Estado del pedido */}
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+            <h2 className="text-sm font-semibold text-gray-600 mb-3 uppercase tracking-wider">Estado del pedido</h2>
+            <div className="flex flex-wrap items-center gap-3">
+              <select
+                value={estado ?? ""}
+                onChange={(e) => setEstado(e.target.value as EstadoPedido)}
+                className={`px-4 py-2 rounded-xl border-2 font-semibold text-sm transition-all focus:outline-none focus:ring-2 focus:ring-[#6F2521]/20 ${estado ? ESTADO_ESTILOS[estado] : "border-gray-200 text-gray-500"}`}
+              >
+                {ESTADOS.map((e) => (
+                  <option key={e} value={e}>{e}</option>
+                ))}
+              </select>
+              <button
+                onClick={handleGuardarEstado}
+                disabled={guardandoEstado || estado === cabecera?.estado}
+                className="inline-flex items-center gap-2 px-5 py-2 bg-[#6F2521] text-white rounded-xl font-semibold text-sm hover:bg-[#5a1e1a] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              >
+                {guardandoEstado ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Guardando…</>
+                ) : estadoGuardado ? (
+                  <><CheckCircle2 className="w-4 h-4" /> Guardado</>
+                ) : (
+                  "Guardar estado"
+                )}
+              </button>
             </div>
           </div>
 
@@ -231,7 +303,7 @@ export default function AdminPedidoDetalle() {
                   <div className="min-w-0">
                     <p className="text-xs text-gray-500 mb-1">Fecha de solicitud</p>
                     <p className="font-semibold text-gray-800">
-                      {new Date(cabecera.fecha_solicitud).toLocaleString("es-CL")}
+                      {fmtFecha(cabecera.fecha_solicitud)}
                     </p>
                   </div>
                 </div>
@@ -252,7 +324,7 @@ export default function AdminPedidoDetalle() {
   ) : (
     <>
       {/* ── TABLA TORTAS ── */}
-      {items.some(it => it.tipo_formulario !== "galletas") && (
+      {items.some(it => it.tipo_formulario === "torta") && (
         <div>
           <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
             <Cake className="w-5 h-5 text-[#6F2521]" />
@@ -265,17 +337,18 @@ export default function AdminPedidoDetalle() {
               <thead>
                 <tr className="bg-gray-50 border-b-2 border-gray-200">
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Producto</th>
-                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Tamaño</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Personas</th>
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Sabor</th>
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Entrega</th>
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Personalizado</th>
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Envío</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Hora retiro</th>
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Imagen</th>
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Detalle</th>
                 </tr>
               </thead>
               <tbody>
-                {items.filter(it => it.tipo_formulario !== "galletas").map((it, idx) => (
+                {items.filter(it => it.tipo_formulario === "torta").map((it, idx) => (
                   <tr key={it.item_id} className={`border-b last:border-0 hover:bg-gray-50 transition-colors ${idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
                     <td className="p-4">
                       <div className="flex items-center gap-3">
@@ -312,6 +385,11 @@ export default function AdminPedidoDetalle() {
                       </span>
                     </td>
                     <td className="p-4">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 text-orange-700 rounded-lg text-sm font-medium">
+                        <Calendar className="w-4 h-4" />{it.hora_retiro ?? "—"}
+                      </span>
+                    </td>
+                    <td className="p-4">
                       <span
                         onClick={() => { if (!it.ruta_imagen_referencia) return; setImagenAbierta(importarImagenReferenciaPorRuta(it.ruta_imagen_referencia, it.tipo_formulario)); }}
                         className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium ${it.ruta_imagen_referencia ? "bg-indigo-50 text-indigo-700 cursor-pointer hover:bg-indigo-100" : "bg-gray-100 text-gray-400"}`}
@@ -335,7 +413,7 @@ export default function AdminPedidoDetalle() {
 
           {/* Mobile - Tortas */}
           <div className="lg:hidden space-y-4">
-            {items.filter(it => it.tipo_formulario !== "galletas").map((it) => (
+            {items.filter(it => it.tipo_formulario === "torta").map((it) => (
               <div key={it.item_id} className="bg-gray-50 rounded-xl border-2 border-gray-200 overflow-hidden hover:border-[#6F2521] transition-colors">
                 <div className="bg-white p-4 flex items-center gap-3 border-b border-gray-200">
                   {it.producto_imagen && <img src={it.producto_imagen} alt={it.producto_nombre ?? ""} className="w-16 h-16 object-cover rounded-lg border-2 border-gray-200 flex-shrink-0" />}
@@ -343,11 +421,12 @@ export default function AdminPedidoDetalle() {
                 </div>
                 <div className="p-4 space-y-3">
                   {[
-                    { icon: <Users className="w-4 h-4" />, label: "Tamaño", value: it.tamano_personas ?? "—", bg: "bg-blue-50" },
+                    { icon: <Users className="w-4 h-4" />, label: "Personas", value: it.tamano_personas ?? "—", bg: "bg-blue-50" },
                     { icon: <Cake className="w-4 h-4" />, label: "Sabor", value: it.sabor_nombre ?? "—", bg: "bg-purple-50" },
                     { icon: <Calendar className="w-4 h-4" />, label: "Entrega", value: it.fecha_entrega ? new Date(it.fecha_entrega).toLocaleDateString("es-CL") : "—", bg: "bg-green-50" },
                     { icon: null, label: "Personalizado", value: it.agregar_nombre_edad == null ? "—" : it.agregar_nombre_edad ? "Sí" : "No", bg: it.agregar_nombre_edad ? "bg-amber-50" : "bg-gray-100" },
                     { icon: <Truck className="w-4 h-4" />, label: "Envío", value: it.metodo_envio ?? "—", bg: "bg-indigo-50" },
+                    { icon: <Calendar className="w-4 h-4" />, label: "Hora retiro", value: it.hora_retiro ?? "—", bg: "bg-orange-50" },
                   ].map(({ icon, label, value, bg }) => (
                     <div key={label} className="flex items-center justify-between">
                       <span className="text-sm text-gray-600 flex items-center gap-2">{icon}{label}</span>
@@ -390,6 +469,7 @@ export default function AdminPedidoDetalle() {
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Cantidad</th>
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Entrega</th>
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Envío</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Hora retiro</th>
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Imagen ref.</th>
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Detalle</th>
                 </tr>
@@ -417,6 +497,21 @@ export default function AdminPedidoDetalle() {
                     <td className="p-4">
                       <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium">
                         <Truck className="w-4 h-4" />{it.metodo_envio ?? "—"}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 text-orange-700 rounded-lg text-sm font-medium">
+                      <Calendar className="w-4 h-4" />{it.hora_retiro ?? "—"}
+                    </span>
+                  </td>
+                    <td className="p-4">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 text-orange-700 rounded-lg text-sm font-medium">
+                      <Calendar className="w-4 h-4" />{it.hora_retiro ?? "—"}
+                    </span>
+                  </td>
+                    <td className="p-4">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 text-orange-700 rounded-lg text-sm font-medium">
+                        <Calendar className="w-4 h-4" />{it.hora_retiro ?? "—"}
                       </span>
                     </td>
                     <td className="p-4">
@@ -454,6 +549,7 @@ export default function AdminPedidoDetalle() {
                     { icon: <Cookie className="w-4 h-4" />, label: "Cantidad", value: it.cantidad ? `${it.cantidad} unid.` : "—", bg: "bg-yellow-50" },
                     { icon: <Calendar className="w-4 h-4" />, label: "Entrega", value: it.fecha_entrega ? new Date(it.fecha_entrega).toLocaleDateString("es-CL") : "—", bg: "bg-green-50" },
                     { icon: <Truck className="w-4 h-4" />, label: "Envío", value: it.metodo_envio ?? "—", bg: "bg-indigo-50" },
+                    { icon: <Calendar className="w-4 h-4" />, label: "Hora retiro", value: it.hora_retiro ?? "—", bg: "bg-orange-50" },
                   ].map(({ icon, label, value, bg }) => (
                     <div key={label} className="flex items-center justify-between">
                       <span className="text-sm text-gray-600 flex items-center gap-2">{icon}{label}</span>
@@ -470,6 +566,121 @@ export default function AdminPedidoDetalle() {
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600 flex items-center gap-2"><AlbumIcon className="w-4 h-4" />Detalle</span>
                       <span onClick={() => setDetalleAbierto(it.detalle_galletas)} className="font-medium text-indigo-700 bg-indigo-50 px-3 py-1 rounded-lg text-sm cursor-pointer hover:bg-indigo-100">Ver detalle</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ── TABLA MINICAKES ── */}
+      {items.some(it => it.tipo_formulario === "minicake") && (
+        <div>
+          <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center gap-2">
+            <Cake className="w-5 h-5 text-[#6F2521]" />
+            Mini Cakes
+          </h3>
+
+          {/* Desktop */}
+          <div className="hidden lg:block overflow-x-auto rounded-xl border border-gray-200">
+            <table className="min-w-full">
+              <thead>
+                <tr className="bg-gray-50 border-b-2 border-gray-200">
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Producto</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Sabor</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Entrega</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Envío</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Hora retiro</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Imagen</th>
+                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Detalle</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.filter(it => it.tipo_formulario === "minicake").map((it, idx) => (
+                  <tr key={it.item_id} className={`border-b last:border-0 hover:bg-gray-50 transition-colors ${idx % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        {it.producto_imagen && (
+                          <img src={it.producto_imagen} alt={it.producto_nombre ?? ""} className="w-14 h-14 object-cover rounded-lg border-2 border-gray-200 flex-shrink-0" />
+                        )}
+                        <span className="font-medium text-gray-800">{it.producto_nombre ?? "—"}</span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-700 rounded-lg text-sm font-medium">
+                        <Cake className="w-4 h-4" />{it.sabor_nombre ?? "—"}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-sm font-medium">
+                        <Calendar className="w-4 h-4" />
+                        {it.fecha_entrega ? new Date(it.fecha_entrega).toLocaleDateString("es-CL") : "—"}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium">
+                        <Truck className="w-4 h-4" />{it.metodo_envio ?? "—"}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 text-orange-700 rounded-lg text-sm font-medium">
+                      <Calendar className="w-4 h-4" />{it.hora_retiro ?? "—"}
+                    </span>
+                  </td>
+                    <td className="p-4">
+                      <span
+                        onClick={() => { if (!it.ruta_imagen_referencia) return; setImagenAbierta(importarImagenReferenciaPorRuta(it.ruta_imagen_referencia, it.tipo_formulario)); }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium ${it.ruta_imagen_referencia ? "bg-indigo-50 text-indigo-700 cursor-pointer hover:bg-indigo-100" : "bg-gray-100 text-gray-400"}`}
+                      >
+                        <Eye className="w-4 h-4" />{it.ruta_imagen_referencia ? "Ver" : "—"}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span
+                        onClick={() => { if (!it.detalle_minicake) return; setDetalleAbierto(it.detalle_minicake); }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium ${it.detalle_minicake ? "bg-indigo-50 text-indigo-700 cursor-pointer hover:bg-indigo-100" : "bg-gray-100 text-gray-400"}`}
+                      >
+                        <AlbumIcon className="w-4 h-4" />{it.detalle_minicake ? "Ver" : "—"}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile - MiniCakes */}
+          <div className="lg:hidden space-y-4">
+            {items.filter(it => it.tipo_formulario === "minicake").map((it) => (
+              <div key={it.item_id} className="bg-gray-50 rounded-xl border-2 border-gray-200 overflow-hidden hover:border-[#6F2521] transition-colors">
+                <div className="bg-white p-4 flex items-center gap-3 border-b border-gray-200">
+                  {it.producto_imagen && <img src={it.producto_imagen} alt={it.producto_nombre ?? ""} className="w-16 h-16 object-cover rounded-lg border-2 border-gray-200 flex-shrink-0" />}
+                  <h3 className="font-semibold text-gray-800 text-lg truncate">{it.producto_nombre ?? "—"}</h3>
+                </div>
+                <div className="p-4 space-y-3">
+                  {[
+                    { icon: <Cake className="w-4 h-4" />,     label: "Sabor",   value: it.sabor_nombre ?? "—",                                                                        bg: "bg-purple-50" },
+                    { icon: <Calendar className="w-4 h-4" />, label: "Entrega", value: it.fecha_entrega ? new Date(it.fecha_entrega).toLocaleDateString("es-CL") : "—",               bg: "bg-green-50"  },
+                    { icon: <Truck className="w-4 h-4" />,    label: "Envío",   value: it.metodo_envio ?? "—",                                                                        bg: "bg-indigo-50" },
+                    { icon: <Calendar className="w-4 h-4" />, label: "Hora retiro", value: it.hora_retiro ?? "—", bg: "bg-orange-50" },
+                  ].map(({ icon, label, value, bg }) => (
+                    <div key={label} className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 flex items-center gap-2">{icon}{label}</span>
+                      <span className={`font-medium text-gray-800 ${bg} px-3 py-1 rounded-lg text-sm`}>{value}</span>
+                    </div>
+                  ))}
+                  {it.ruta_imagen_referencia && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 flex items-center gap-2"><Eye className="w-4 h-4" />Imagen</span>
+                      <span onClick={() => setImagenAbierta(importarImagenReferenciaPorRuta(it.ruta_imagen_referencia, it.tipo_formulario))} className="font-medium text-indigo-700 bg-indigo-50 px-3 py-1 rounded-lg text-sm cursor-pointer hover:bg-indigo-100">Ver imagen</span>
+                    </div>
+                  )}
+                  {it.detalle_minicake && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600 flex items-center gap-2"><AlbumIcon className="w-4 h-4" />Detalle</span>
+                      <span onClick={() => setDetalleAbierto(it.detalle_minicake)} className="font-medium text-indigo-700 bg-indigo-50 px-3 py-1 rounded-lg text-sm cursor-pointer hover:bg-indigo-100">Ver detalle</span>
                     </div>
                   )}
                 </div>

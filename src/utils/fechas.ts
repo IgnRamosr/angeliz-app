@@ -73,28 +73,33 @@ export function toLocalISODate(d: Date) {
 
 
     // Alternativa más compacta si prefieres un formato más corto
-    export const formatearFechaHoraCorta = (fechaString: string): string => {
-        try {
-            const fecha = new Date(fechaString);
-            
-            if (isNaN(fecha.getTime())) {
-                return fechaString;
-            }
+export const formatearFechaHoraCorta = (fechaString: string): string => {
+    try {
+        const meses = [
+            'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+            'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
+        ];
 
-            const dia = fecha.getDate().toString().padStart(2, '0');
-            const mes = fecha.getMonth() + 1;
-            const año = fecha.getFullYear();
-            const horas = fecha.getHours().toString().padStart(2, '0');
-            const minutos = fecha.getMinutes().toString().padStart(2, '0');
-
-            const meses = [
-                'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
-                'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
-            ];
-
-            return `${dia} ${meses[mes - 1]} ${año}, ${horas}:${minutos}`;
-        } catch (error) {
-            console.error('Error al formatear fecha:', error);
-            return fechaString;
+        // Solo fecha "YYYY-MM-DD" — parsear sin hora para evitar desfase UTC
+        if (/^\d{4}-\d{2}-\d{2}$/.test(fechaString)) {
+            const [y, m, d] = fechaString.split('-').map(Number);
+            return `${String(d).padStart(2, '0')} ${meses[m - 1]} ${y}`;
         }
-    };
+
+        // Timestamp con hora — usar Date normal (el browser convierte a hora local)
+        const utcString = /Z|[+-]\d{2}:\d{2}$/.test(fechaString) ? fechaString : fechaString + "Z";
+        const fecha = new Date(utcString);
+        if (isNaN(fecha.getTime())) return utcString;
+
+        const dia     = fecha.getDate().toString().padStart(2, '0');
+        const mes     = fecha.getMonth() + 1;
+        const año     = fecha.getFullYear();
+        const horas   = fecha.getHours().toString().padStart(2, '0');
+        const minutos = fecha.getMinutes().toString().padStart(2, '0');
+
+        return `${dia} ${meses[mes - 1]} ${año}, ${horas}:${minutos}`;
+    } catch (error) {
+        console.error('Error al formatear fecha:', error);
+        return fechaString;
+    }
+};

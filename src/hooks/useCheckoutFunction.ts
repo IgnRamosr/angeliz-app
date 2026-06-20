@@ -85,12 +85,11 @@ const insertarItemsPedido = async (pedidoID: number, itemsCarrito:CarritoItem[])
 }
 
 
-// Crear funcionamiento para insertar galletas
 const insertarFormulario = async (itemsCarrito: CarritoItem[], idsItemsPedido: number[]| undefined) => {
 
     const filasTortas = itemsCarrito
     .map((item, index) => ({item, item_pedido_id: idsItemsPedido?.[index]}))
-    .filter(({item, item_pedido_id}) => item!.tipo_formulario == "torta" && !!item_pedido_id)
+    .filter(({item, item_pedido_id}) => item!.tipo_formulario === "torta" && !!item_pedido_id)
     .map(({item, item_pedido_id})=>({
     item_pedido_id,
     tamano_id: item.tamano_id, 
@@ -99,7 +98,8 @@ const insertarFormulario = async (itemsCarrito: CarritoItem[], idsItemsPedido: n
     detalle: item.detalle, 
     fecha_entrega: item.fecha_entrega, 
     agregar_nombre_edad:item.agregaNombreEdad, 
-    metodo_envio: item.metodo_envio
+    metodo_envio: item.metodo_envio,
+    hora_retiro: item.hora_retiro,
 
     }));
 
@@ -112,12 +112,27 @@ const insertarFormulario = async (itemsCarrito: CarritoItem[], idsItemsPedido: n
     ruta_imagen_referencia: item.ruta_imagen_referencia, 
     detalle: item.detalle, 
     fecha_entrega: item.fecha_entrega, 
-    metodo_envio: item.metodo_envio
+    metodo_envio: item.metodo_envio,
+    hora_retiro: item.hora_retiro
 
+    }));
+
+    const filasMiniCakes = itemsCarrito
+    .map((item, index) => ({item, item_pedido_id: idsItemsPedido?.[index]}))
+    .filter(({item, item_pedido_id}) => item!.tipo_formulario === "minicake" && !!item_pedido_id)
+    .map(({item, item_pedido_id}) => ({
+        item_pedido_id,
+        sabor_id: item.sabor_id,
+        ruta_imagen_referencia: item.ruta_imagen_referencia,
+        detalle: item.detalle,
+        fecha_entrega: item.fecha_entrega,
+        metodo_envio: item.metodo_envio,
+        hora_retiro: item.hora_retiro,
     }));
 
 const { error: errorTortas } = await supabase.from("formulario_torta").insert(filasTortas);
 const { error: errorGalletas } = await supabase.from("formulario_galletas").insert(filasGalletas);
+const { error: errorMiniCakes } = await supabase.from("formulario_minicake").insert(filasMiniCakes);
 
     if(errorTortas){
         console.error("Error insertando items al formulario tortas:", errorTortas?.message);
@@ -125,6 +140,10 @@ const { error: errorGalletas } = await supabase.from("formulario_galletas").inse
 
     if(errorGalletas){
         console.error("Error insertando items al formulario galletas:", errorGalletas?.message);
+    }
+
+    if(errorMiniCakes){
+        console.error("Error insertando items al formulario minicakes:", errorMiniCakes?.message);
     }
 }
 
