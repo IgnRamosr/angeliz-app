@@ -45,11 +45,13 @@ export type PropsFormularioGalletas = Pick<Producto,"id" | "nombre"  | "tipo_for
 
 export type PropsFormularioMiniCake = Pick<Producto, "id" | "nombre" | "sabor_producto" | "tipo_formulario" | "imagenes_producto">;
 
-export type CarritoItem = {uid: UID; user_id?:string; nombre_producto: string;  tamano?:number; fecha_entrega:string; sabor_nombre?: string; ruta_imagen_referencia?: string; detalle?:string; agregaNombreEdad?:boolean; metodo_envio:string; imagen_url: string; producto_id: number; sabor_id?:number; tamano_id?: number; tipo_formulario:string; cantidad?: number; hora_retiro?: string; };
+export type CarritoItem = {uid: UID; user_id?:string; nombre_producto: string;  tamano?:number;  sabor_nombre?: string; ruta_imagen_referencia?: string; detalle?:string; agregaNombreEdad?:boolean;  imagen_url: string; producto_id: number; sabor_id?:number; tamano_id?: number; tipo_formulario:string; cantidad?: number; };
+
+export type DatosEnvioPedido = {metodoEnvio: string; horaRetiro?: string; fechaEntrega: string;};
 
 export type EstadoPedido = "En revisión" | "Contactado" | "Confirmado" | "En camino" | "Entregado" | "Cancelado";
 
-export type PedidoConItems = {id: number; usuario_id: string; fecha_solicitud: string; items_pedido: ItemPedido[], estado: EstadoPedido };
+export type PedidoConItems = {id: number; usuario_id: string; fecha_solicitud: string; items_pedido: ItemPedido[], estado: EstadoPedido, metodo_envio?: string | null; hora_retiro?: string | null; fecha_entrega?: string | null;  };
 
 export type ItemPedido = { id: number; producto_id: number; nombre:ProductoNombre;  subtotal: number, formulario_torta: FormularioTorta, formulario_galletas: FormularioGalletas, formulario_minicake: FormularioMiniCake };
 

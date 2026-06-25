@@ -5,8 +5,6 @@
     import { toast } from "react-toastify";
     import type { CarritoItem, PropsFormularioTorta, UID } from "../../assets/types-interfaces/types";
     import { useCart } from "../Navegacion/useCart";
-    import FechaEntregaPicker from "./FechaEntregaPicker";
-    import { toLocalISODate } from "../../utils/fechas";
     import { comprimirImagen, eliminarImagenReferenciaSupabase, importarImagenReferenciaPorRuta, subirImagenReferenciaSupabase } from "../../hooks/useUploadImageSupabase";
 
     export const FormularioTorta = ({id, nombre, tamano_producto, sabor_producto, tipo_formulario, imagenes_producto}: PropsFormularioTorta) => {
@@ -26,7 +24,6 @@
     const [uid, setUid] = useState<UID>(`${""}-${""}-${""}-${""}-${""}`);
     const [tamano, setTamano] = useState<number | undefined>(tamano_producto[0]?.tamano);
     const [tamano_id, setTamano_id] = useState<number | undefined>(tamano_producto[0]?.tamano_id ?? 1);
-    const [fechaEntrega, setFechaEntrega] = useState<Date | null>(null);
     const [sabor_id, setSabor_id] = useState<number | undefined>(sabor_producto[0]?.sabores.sabor_id ?? 1);
     const [saborNombre, setSaborNombre] = useState<string | undefined>(sabor_producto[0]?.sabores.nombre ?? "Chocolate");
     const [vistaPreviaImagen, setVistaPreviaImagen] = useState<string | null>(null);
@@ -34,8 +31,6 @@
     const [detalleTorta, setDetalleTorta] = useState<string | undefined>('');
     const [rutaImagenReferencia, setRutaImagenReferencia] = useState<string | undefined>('');
     const [agregaNombreEdad, setagregaNombreEdad] = useState<boolean>(false);
-    const [metodoEnvio, setMetodoEnvio] = useState<string>("Retiro en domicilio");
-    const [horaRetiro, setHoraRetiro] = useState<string>('');
 
     const [esconder, setEsconder] = useState<boolean>(false);
 
@@ -45,28 +40,21 @@
         setUid(atributosAcambiar.uid);
         setTamano(atributosAcambiar.tamano);
         setTamano_id(atributosAcambiar.tamano_id);
-        setFechaEntrega(new Date(atributosAcambiar.fecha_entrega));
         setSabor_id(atributosAcambiar.sabor_id);
         setSaborNombre(atributosAcambiar.sabor_nombre);
         setRutaImagenReferencia(atributosAcambiar.ruta_imagen_referencia);
         setDetalleTorta(atributosAcambiar.detalle);
-        setMetodoEnvio(atributosAcambiar.metodo_envio);
         setagregaNombreEdad(!!atributosAcambiar.agregaNombreEdad);
         setImagenReferencia(null);
         setVistaPreviaImagen(null);
-        setHoraRetiro(atributosAcambiar.hora_retiro ?? '');
-
     }, [atributosAcambiar]);
 
     {/* Función para validar si el formulario está completo */}
     const isFormComplete = useMemo(() => {
         const tieneTamano = Number.isFinite(tamano_id) && tamano_id! > 0;
         const tieneSabor = Number.isFinite(sabor_id) && sabor_id! > 0;
-        const tieneFecha = fechaEntrega instanceof Date && !isNaN(fechaEntrega.getTime());
-        const tieneMetodo = metodoEnvio.trim().length > 0;
-        const tieneHoraRetiro = metodoEnvio !== "Retiro en domicilio" || horaRetiro.trim().length > 0;
-        return tieneTamano && tieneSabor && tieneFecha && tieneMetodo && tieneHoraRetiro;
-    }, [tamano_id, sabor_id, fechaEntrega, metodoEnvio, horaRetiro]);
+        return tieneTamano && tieneSabor;
+    }, [tamano_id, sabor_id]);
 
     const CapturarSaborIDyNombre = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const id = Number(e.currentTarget.value);
@@ -136,8 +124,6 @@
         if (esconder) return;
 
         const imagenURL = imagenes_producto?.[0]?.url ?? "";
-        const fechaStr = fechaEntrega ? toLocalISODate(fechaEntrega) : "";
-
 
         {/* Sí editamos al item se asigna los valores previamente capturados*/}
 
@@ -153,17 +139,14 @@
             user_id: sesion?.user.id,
             nombre_producto: nombre,
             tamano,
-            fecha_entrega: fechaStr,
             sabor_nombre: saborNombre,
             ruta_imagen_referencia: rutaArchivo,
             agregaNombreEdad: agregaNombreEdad,
-            metodo_envio: metodoEnvio,
             imagen_url: imagenURL,
             producto_id: id,
             sabor_id: sabor_id,
             tamano_id: tamano_id,
             tipo_formulario,
-            hora_retiro: metodoEnvio === "Retiro en domicilio" ? horaRetiro : undefined,
         };
 
 
@@ -192,18 +175,15 @@
             user_id: sesion?.user.id,
             nombre_producto: nombre,
             tamano,
-            fecha_entrega: fechaStr,
             sabor_nombre: saborNombre,
             ruta_imagen_referencia: rutaArchivo,
             detalle: detalleTorta,
             agregaNombreEdad,
-            metodo_envio: metodoEnvio,
             imagen_url: imagenURL,
             producto_id: id,
             sabor_id: sabor_id,
             tamano_id: tamano_id,
             tipo_formulario,
-            hora_retiro: metodoEnvio === "Retiro en domicilio" ? horaRetiro : undefined,
         };
 
         await agregarProductoCarrito(item);
@@ -243,12 +223,6 @@
             </select>
         </div>
 
-        {/* Campo fecha entrega */}
-
-        <div className="space-y-2">
-            <label className="block text-sm font-semibold text-gray-700">Fecha de entrega</label>
-            <FechaEntregaPicker value={fechaEntrega} onChange={setFechaEntrega} minDaysFromToday={1} />
-        </div>
 
         {/* Campo sabor */}
 
@@ -326,14 +300,12 @@
         {/* Campo desea agregar nombre y/o edad */}
 
         <div className="space-y-3">
-            <label className="block text-sm font-semibold text-gray-700">¿Desea agregar nombre y/o edad?</label>
-            <div className="flex gap-6">
             <label className="flex items-center gap-2 cursor-pointer group">
                 <input
-                checked={agregaNombreEdad === false}
+                checked={agregaNombreEdad === true}
                 type="radio"
                 name="agregar_datos"
-                onChange={() => setagregaNombreEdad(false)}
+                onChange={() => setagregaNombreEdad(true)}
                 className="w-4 h-4 text-pink-600 focus:ring-[#f57fa6] cursor-pointer"
                 />
                 <span className="text-gray-700 group-hover:text-gray-900 transition-colors">Sí</span>
@@ -348,40 +320,8 @@
                 />
                 <span className="text-gray-700 group-hover:text-gray-900 transition-colors">No</span>
             </label>
-            </div>
         </div>
 
-        {/* Campo método de envío */}
-
-        <div className="space-y-2">
-            <label className="block text-sm font-semibold text-gray-700">Método de envío</label>
-            <select
-            value={metodoEnvio}
-            onChange={(e) => setMetodoEnvio(e.target.value)}
-            required
-            className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none"
-            >
-            {/* Alineado con el estado inicial */}
-            <option value="Retiro en domicilio">Retiro en domicilio</option>
-            <option value="UberFlash">UberFlash</option>
-            <option value="Metro">Metro</option>
-            {nombre.includes('lunchcake') && <option value="Delivery">Delivery</option>}
-            </select>
-        </div>
-
-        {/* Campo hora de retiro (solo si es Retiro en domicilio) */}
-        {metodoEnvio === "Retiro en domicilio" && (
-            <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">Hora de retiro</label>
-                <input
-                    type="time"
-                    value={horaRetiro}
-                    onChange={(e) => setHoraRetiro(e.target.value)}
-                    required
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none"
-                />
-            </div>
-        )}
 
         {/* Botón agregar al carrito / actualizar producto */}
 

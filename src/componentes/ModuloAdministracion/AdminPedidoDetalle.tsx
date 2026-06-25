@@ -14,11 +14,12 @@ import {
   ShoppingBag,
   Cake,
   Users,
-  Truck,
   Eye,
   AlbumIcon,
   Cookie,
   CheckCircle2,
+  Truck,
+  Mail
 } from "lucide-react";
 
 const ESTADOS: EstadoPedido[] = ["En revisión", "Contactado", "Confirmado", "En camino", "Entregado", "Cancelado"];
@@ -87,24 +88,19 @@ export default function AdminPedidoDetalle() {
   }
 
   // Construimos el href de WhatsApp a partir de la cabecera + items ya cargados
-  const waHref = useMemo(() => {
+const waHref = useMemo(() => {
     if (!cabecera) return null;
 
-    // Adaptamos los items a las claves que espera buildWhatsAppHrefFromPedido
     const itemsAdaptados = (items ?? []).map((it) => ({
         nombre_producto: it.producto_nombre ?? "Producto",
         tipo_formulario: it.tipo_formulario ?? null,
         tamano: it.tamano_personas ?? null,
         sabor_nombre: it.sabor_nombre ?? null,
-        fecha_entrega: it.fecha_entrega ?? null,
-        metodo_envio: it.metodo_envio ?? null,
         ruta_imagen_referencia: it.ruta_imagen_referencia ?? null,
         detalle: it.detalle ?? it.detalle_minicake ?? it.detalle_galletas ?? null,
-        hora_retiro: it.hora_retiro ?? null,  
         agregar_nombre_edad: it.agregar_nombre_edad ?? null,
         cantidad: it.cantidad ?? null
     }));
-
 
     return buildWhatsAppHrefFromPedido({
       id: cabecera.pedido_id,
@@ -112,9 +108,12 @@ export default function AdminPedidoDetalle() {
       contacto_apellido: cabecera.cliente_apellido,
       contacto_telefono: cabecera.cliente_telefono,
       fecha_solicitud: cabecera.fecha_solicitud,
+      fecha_entrega: cabecera.fecha_entrega,
+      metodo_envio: cabecera.metodo_envio,
+      hora_retiro: cabecera.hora_retiro,
       items: itemsAdaptados,
     });
-  }, [cabecera, items]);
+}, [cabecera, items]);
 
   // Estados de carga y error
   if (cargando) {
@@ -308,6 +307,51 @@ export default function AdminPedidoDetalle() {
                   </div>
                 </div>
               </div>
+
+            {/* Correo */}
+            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-[#6F2521]/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <Mail className="w-5 h-5 text-[#6F2521]" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-gray-500 mb-1">Correo</p>
+                  <p className="font-semibold text-gray-800 truncate">
+                    {cabecera.cliente_email ?? "—"}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+              {/* Fecha de entrega */}
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-[#6F2521]/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Calendar className="w-5 h-5 text-[#6F2521]" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs text-gray-500 mb-1">Fecha de entrega</p>
+                    <p className="font-semibold text-gray-800">
+                      {cabecera.fecha_entrega ? new Date(cabecera.fecha_entrega).toLocaleDateString("es-CL") : "—"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Envío */}
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-[#6F2521]/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Truck className="w-5 h-5 text-[#6F2521]" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs text-gray-500 mb-1">Envío</p>
+                    <p className="font-semibold text-gray-800">
+                      {cabecera.metodo_envio ?? "—"}{cabecera.hora_retiro ? ` · ${cabecera.hora_retiro}` : ""}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -339,10 +383,7 @@ export default function AdminPedidoDetalle() {
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Producto</th>
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Personas</th>
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Sabor</th>
-                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Entrega</th>
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Personalizado</th>
-                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Envío</th>
-                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Hora retiro</th>
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Imagen</th>
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Detalle</th>
                 </tr>
@@ -368,27 +409,13 @@ export default function AdminPedidoDetalle() {
                         <Cake className="w-4 h-4" />{it.sabor_nombre ?? "—"}
                       </span>
                     </td>
-                    <td className="p-4">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-sm font-medium">
-                        <Calendar className="w-4 h-4" />
-                        {it.fecha_entrega ? new Date(it.fecha_entrega).toLocaleDateString("es-CL") : "—"}
-                      </span>
-                    </td>
+
                     <td className="p-4">
                       <span className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium ${it.agregar_nombre_edad ? "bg-amber-50 text-amber-700" : "bg-gray-100 text-gray-600"}`}>
                         {it.agregar_nombre_edad == null ? "—" : it.agregar_nombre_edad ? "Sí" : "No"}
                       </span>
                     </td>
-                    <td className="p-4">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium">
-                        <Truck className="w-4 h-4" />{it.metodo_envio ?? "—"}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 text-orange-700 rounded-lg text-sm font-medium">
-                        <Calendar className="w-4 h-4" />{it.hora_retiro ?? "—"}
-                      </span>
-                    </td>
+
                     <td className="p-4">
                       <span
                         onClick={() => { if (!it.ruta_imagen_referencia) return; setImagenAbierta(importarImagenReferenciaPorRuta(it.ruta_imagen_referencia, it.tipo_formulario)); }}
@@ -423,10 +450,7 @@ export default function AdminPedidoDetalle() {
                   {[
                     { icon: <Users className="w-4 h-4" />, label: "Personas", value: it.tamano_personas ?? "—", bg: "bg-blue-50" },
                     { icon: <Cake className="w-4 h-4" />, label: "Sabor", value: it.sabor_nombre ?? "—", bg: "bg-purple-50" },
-                    { icon: <Calendar className="w-4 h-4" />, label: "Entrega", value: it.fecha_entrega ? new Date(it.fecha_entrega).toLocaleDateString("es-CL") : "—", bg: "bg-green-50" },
                     { icon: null, label: "Personalizado", value: it.agregar_nombre_edad == null ? "—" : it.agregar_nombre_edad ? "Sí" : "No", bg: it.agregar_nombre_edad ? "bg-amber-50" : "bg-gray-100" },
-                    { icon: <Truck className="w-4 h-4" />, label: "Envío", value: it.metodo_envio ?? "—", bg: "bg-indigo-50" },
-                    { icon: <Calendar className="w-4 h-4" />, label: "Hora retiro", value: it.hora_retiro ?? "—", bg: "bg-orange-50" },
                   ].map(({ icon, label, value, bg }) => (
                     <div key={label} className="flex items-center justify-between">
                       <span className="text-sm text-gray-600 flex items-center gap-2">{icon}{label}</span>
@@ -467,9 +491,6 @@ export default function AdminPedidoDetalle() {
                 <tr className="bg-gray-50 border-b-2 border-gray-200">
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Producto</th>
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Cantidad</th>
-                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Entrega</th>
-                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Envío</th>
-                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Hora retiro</th>
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Imagen ref.</th>
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Detalle</th>
                 </tr>
@@ -488,32 +509,8 @@ export default function AdminPedidoDetalle() {
                         <Cookie className="w-4 h-4" />{it.cantidad ? `${it.cantidad} unid.` : "—"}
                       </span>
                     </td>
-                    <td className="p-4">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-sm font-medium">
-                        <Calendar className="w-4 h-4" />
-                        {it.fecha_entrega ? new Date(it.fecha_entrega).toLocaleDateString("es-CL") : "—"}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium">
-                        <Truck className="w-4 h-4" />{it.metodo_envio ?? "—"}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 text-orange-700 rounded-lg text-sm font-medium">
-                      <Calendar className="w-4 h-4" />{it.hora_retiro ?? "—"}
-                    </span>
-                  </td>
-                    <td className="p-4">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 text-orange-700 rounded-lg text-sm font-medium">
-                      <Calendar className="w-4 h-4" />{it.hora_retiro ?? "—"}
-                    </span>
-                  </td>
-                    <td className="p-4">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 text-orange-700 rounded-lg text-sm font-medium">
-                        <Calendar className="w-4 h-4" />{it.hora_retiro ?? "—"}
-                      </span>
-                    </td>
+
+
                     <td className="p-4">
                       <span
                         onClick={() => { if (!it.ruta_imagen_referencia) return; setImagenAbierta(importarImagenReferenciaPorRuta(it.ruta_imagen_referencia, it.tipo_formulario)); }}
@@ -547,9 +544,7 @@ export default function AdminPedidoDetalle() {
                 <div className="p-4 space-y-3">
                   {[
                     { icon: <Cookie className="w-4 h-4" />, label: "Cantidad", value: it.cantidad ? `${it.cantidad} unid.` : "—", bg: "bg-yellow-50" },
-                    { icon: <Calendar className="w-4 h-4" />, label: "Entrega", value: it.fecha_entrega ? new Date(it.fecha_entrega).toLocaleDateString("es-CL") : "—", bg: "bg-green-50" },
-                    { icon: <Truck className="w-4 h-4" />, label: "Envío", value: it.metodo_envio ?? "—", bg: "bg-indigo-50" },
-                    { icon: <Calendar className="w-4 h-4" />, label: "Hora retiro", value: it.hora_retiro ?? "—", bg: "bg-orange-50" },
+
                   ].map(({ icon, label, value, bg }) => (
                     <div key={label} className="flex items-center justify-between">
                       <span className="text-sm text-gray-600 flex items-center gap-2">{icon}{label}</span>
@@ -590,9 +585,6 @@ export default function AdminPedidoDetalle() {
                 <tr className="bg-gray-50 border-b-2 border-gray-200">
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Producto</th>
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Sabor</th>
-                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Entrega</th>
-                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Envío</th>
-                  <th className="text-left p-4 text-sm font-semibold text-gray-700">Hora retiro</th>
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Imagen</th>
                   <th className="text-left p-4 text-sm font-semibold text-gray-700">Detalle</th>
                 </tr>
@@ -613,22 +605,8 @@ export default function AdminPedidoDetalle() {
                         <Cake className="w-4 h-4" />{it.sabor_nombre ?? "—"}
                       </span>
                     </td>
-                    <td className="p-4">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-50 text-green-700 rounded-lg text-sm font-medium">
-                        <Calendar className="w-4 h-4" />
-                        {it.fecha_entrega ? new Date(it.fecha_entrega).toLocaleDateString("es-CL") : "—"}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-sm font-medium">
-                        <Truck className="w-4 h-4" />{it.metodo_envio ?? "—"}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 text-orange-700 rounded-lg text-sm font-medium">
-                      <Calendar className="w-4 h-4" />{it.hora_retiro ?? "—"}
-                    </span>
-                  </td>
+
+
                     <td className="p-4">
                       <span
                         onClick={() => { if (!it.ruta_imagen_referencia) return; setImagenAbierta(importarImagenReferenciaPorRuta(it.ruta_imagen_referencia, it.tipo_formulario)); }}
@@ -662,9 +640,6 @@ export default function AdminPedidoDetalle() {
                 <div className="p-4 space-y-3">
                   {[
                     { icon: <Cake className="w-4 h-4" />,     label: "Sabor",   value: it.sabor_nombre ?? "—",                                                                        bg: "bg-purple-50" },
-                    { icon: <Calendar className="w-4 h-4" />, label: "Entrega", value: it.fecha_entrega ? new Date(it.fecha_entrega).toLocaleDateString("es-CL") : "—",               bg: "bg-green-50"  },
-                    { icon: <Truck className="w-4 h-4" />,    label: "Envío",   value: it.metodo_envio ?? "—",                                                                        bg: "bg-indigo-50" },
-                    { icon: <Calendar className="w-4 h-4" />, label: "Hora retiro", value: it.hora_retiro ?? "—", bg: "bg-orange-50" },
                   ].map(({ icon, label, value, bg }) => (
                     <div key={label} className="flex items-center justify-between">
                       <span className="text-sm text-gray-600 flex items-center gap-2">{icon}{label}</span>

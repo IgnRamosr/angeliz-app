@@ -91,8 +91,7 @@ const BotonVerImagen = ({ ruta, bucket }: { ruta: string; bucket: string }) => {
 const DetalleMiniCake = ({ fm, nombre }: { fm: NonNullable<any>; nombre: string }) => {
     const rows = [
         { icon: <Cake     className="w-4 h-4 text-pink-600"  />, bg: "bg-pink-100",  label: "Sabor",   value: fm.sabor_nombre?.nombre ?? "—" },
-        { icon: <Calendar className="w-4 h-4 text-blue-600"  />, bg: "bg-blue-100",  label: "Entrega", value: fm.fecha_entrega          ?? "—" },
-        { icon: <Truck    className="w-4 h-4 text-green-600" />, bg: "bg-green-100", label: "Envío",   value: fm.metodo_envio            ?? "—" },
+
     ];
 
     return (
@@ -120,8 +119,6 @@ const DetalleTorta = ({ ft, nombre, mostrarTamano = true, bucket = "torta" }: {
     const rows = [
         ...(mostrarTamano ? [{ icon: <Users className="w-4 h-4 text-purple-600" />, bg: "bg-purple-100", label: "Personas", value: ft.tamano?.tamano ?? "—" }] : []),
         { icon: <Cake     className="w-4 h-4 text-pink-600"  />, bg: "bg-pink-100",  label: "Sabor",   value: ft.sabor_nombre?.nombre ?? "—" },
-        { icon: <Calendar className="w-4 h-4 text-blue-600"  />, bg: "bg-blue-100",  label: "Entrega", value: ft.fecha_entrega          ?? "—" },
-        { icon: <Truck    className="w-4 h-4 text-green-600" />, bg: "bg-green-100", label: "Envío",   value: ft.metodo_envio            ?? "—" },
     ];
 
     return (
@@ -138,8 +135,6 @@ const DetalleTorta = ({ ft, nombre, mostrarTamano = true, bucket = "torta" }: {
 const DetalleGalletas = ({ fg, nombre }: { fg: NonNullable<any>; nombre: string }) => {
   const rows = [
     { icon: <Cookie   className="w-4 h-4 text-yellow-600" />, bg: "bg-yellow-100", label: "Cantidad", value: fg.cantidad      ?? "—" },
-    { icon: <Calendar className="w-4 h-4 text-blue-600"   />, bg: "bg-blue-100",   label: "Entrega",  value: fg.fecha_entrega ?? "—" },
-    { icon: <Truck    className="w-4 h-4 text-green-600"  />, bg: "bg-green-100",  label: "Envío",    value: fg.metodo_envio  ?? "—" },
   ];
 
   return (
@@ -283,6 +278,18 @@ export const MisPedidos = () => {
                           <span className="text-gray-700">{formatearFechaHoraCorta(pedido.fecha_solicitud)}</span>
                         </div>
                       </div>
+                      {pedido.fecha_entrega && (
+                        <div className="flex items-start gap-2 text-sm text-gray-600">
+                          <Calendar className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                          <span><strong>Entrega:</strong> {new Date(pedido.fecha_entrega).toLocaleDateString("es-CL")}</span>
+                        </div>
+                      )}
+                      {pedido.metodo_envio && (
+                        <div className="flex items-start gap-2 text-sm text-gray-600">
+                          <Truck className="w-4 h-4 text-green-500 flex-shrink-0 mt-0.5" />
+                          <span><strong>Envío:</strong> {pedido.metodo_envio}{pedido.hora_retiro ? ` (${pedido.hora_retiro})` : ""}</span>
+                        </div>
+                      )}
                     </div>
                     <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${isOpen ? "bg-gradient-to-br from-pink-500 to-purple-500 text-white shadow-lg" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}>
                       {isOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}

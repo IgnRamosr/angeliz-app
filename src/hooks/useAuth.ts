@@ -39,26 +39,35 @@ export const useAutenticacion = () => {
     return await supabase.auth.signInWithPassword({ email, password });
   };
 
-  const cerrarSesion = async () => {
+const cerrarSesion = async () => {
     await supabase.auth.signOut();
 
     const sesionAnonima = localStorage.getItem("anon_session");
     if (sesionAnonima) {
       const s = JSON.parse(sesionAnonima);
       if (s?.access_token && s?.refresh_token) {
-        const { error } = await supabase.auth.setSession({
+        const { data, error } = await supabase.auth.setSession({
           access_token: s.access_token,
           refresh_token: s.refresh_token,
         });
-        if (!error) return;
+
+        // Validar contra el servidor, no solo confiar en setSession
+        if (!error) {
+          const { error: errUser } = await supabase.auth.getUser();
+          if (!errUser) return; // sesión realmente válida
+        }
+
+        // Tokens corruptos/caducados: limpiar
+        localStorage.removeItem("anon_session");
+        await supabase.auth.signOut();
       }
     }
 
-    // Si tu SDK tiene esta función disponible:
     if (typeof supabase.auth.signInAnonymously === "function") {
-      await supabase.auth.signInAnonymously();
+      const { error } = await supabase.auth.signInAnonymously();
+      if (error) console.error("No se pudo crear sesión anónima:", error.message);
     }
-  };
+};
 
   const asignarSesionAnonima = async () => {
     const { data: { session } } = await supabase.auth.getSession();

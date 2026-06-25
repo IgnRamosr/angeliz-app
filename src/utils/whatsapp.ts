@@ -53,11 +53,8 @@ type ItemDetalle = {
     tamano?: number | null;
     cantidad?: number | null;
     sabor_nombre?: string | null;
-    fecha_entrega?: string | null;
-    metodo_envio?: string | null;
     detalle?: string | null;
     ruta_imagen_referencia?: string | null;
-    hora_retiro?: string | null;
     agregar_nombre_edad?: boolean | null;
 };
 
@@ -67,6 +64,9 @@ type PedidoDetalleParaWA = {
   contacto_apellido?: string | null;
   contacto_telefono?: string | null;
   fecha_solicitud?: string | null;
+  fecha_entrega?: string | null;
+  metodo_envio?: string | null;
+  hora_retiro?: string | null;
   items: ItemDetalle[];
 };
 
@@ -120,9 +120,7 @@ export function buildWhatsAppHrefFromPedido(p: PedidoDetalleParaWA) {
         const tipo           = it.tipo_formulario ?? "";
         const esCrea         = nombreProducto.toLowerCase().includes("crea");
         const esMini         = tipo === "minicake" || nombreProducto.toLowerCase().includes("minicake");
-        const fechaEnt       = it.fecha_entrega
-            ? (() => { const [y,m,d] = it.fecha_entrega!.split("T")[0].split("-").map(Number); return new Date(y, m-1, d).toLocaleDateString("es-CL"); })()
-            : "—";
+
 
         const partes: string[] = [`*${i + 1}. ${nombreProducto}*`];
 
@@ -135,13 +133,6 @@ export function buildWhatsAppHrefFromPedido(p: PedidoDetalleParaWA) {
         if ((tipo === "torta" || esMini) && it.sabor_nombre)
             partes.push(`\u{1F382} Sabor: ${it.sabor_nombre}`);
 
-            partes.push(`\u{1F4C5} Entrega: ${fechaEnt}`);
-
-        if (it.metodo_envio)
-            partes.push(`\u{1F69A} Envío: ${it.metodo_envio}`);
-
-        if (it.hora_retiro)
-            partes.push(`\u{1F55B} Hora retiro: ${it.hora_retiro}`);
 
         if (tipo === "torta" && it.agregar_nombre_edad !== null && !esCrea && !esMini)
             partes.push(`\u{1F464} Agrega Nombre/Edad: ${it.agregar_nombre_edad ? "Sí" : "No"}`);
@@ -155,10 +146,16 @@ export function buildWhatsAppHrefFromPedido(p: PedidoDetalleParaWA) {
         return partes.join("\n");
     });
 
+    const fechaEntregaTexto = p.fecha_entrega
+        ? (() => { const [y,m,d] = p.fecha_entrega!.split("T")[0].split("-").map(Number); return new Date(y, m-1, d).toLocaleDateString("es-CL"); })()
+        : "—";
+
     const header =
         `Hola${nombreCliente ? ` ${nombreCliente}` : ""} \u{1F44B}\n` +
         `Te contactamos de *Angeliz* por tu *pedido #${p.id}*.\n` +
-        `\u{1F550} Solicitud: ${fechaSolicitud}\n`;
+        `\u{1F550} Solicitud: ${fechaSolicitud}\n` +
+        `\u{1F4C5} Entrega: ${fechaEntregaTexto}\n` +
+        (p.metodo_envio ? `\u{1F69A} Envío: ${p.metodo_envio}${p.hora_retiro ? ` (${p.hora_retiro})` : ""}\n` : "");
 
     const cuerpo =
         `\n*\u{1F4E6} Detalle de tu pedido:*\n` +

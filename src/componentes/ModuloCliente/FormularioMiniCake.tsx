@@ -5,8 +5,6 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import type { CarritoItem, PropsFormularioMiniCake, UID } from "../../assets/types-interfaces/types";
 import { useCart } from "../Navegacion/useCart";
-import FechaEntregaPicker from "./FechaEntregaPicker";
-import { toLocalISODate } from "../../utils/fechas";
 import { comprimirImagen, eliminarImagenReferenciaSupabase, importarImagenReferenciaPorRuta, subirImagenReferenciaSupabase } from "../../hooks/useUploadImageSupabase";
 
 
@@ -29,43 +27,34 @@ export const FormularioMiniCake = ({ id, nombre, sabor_producto, tipo_formulario
     const camposExtraRequeridos = esCrea;
 
     const [uid, setUid] = useState<UID>(`${""}-${""}-${""}-${""}-${""}`);
-    const [fechaEntrega, setFechaEntrega] = useState<Date | null>(null);
     const [sabor_id, setSabor_id] = useState<number | undefined>(sabor_producto[0]?.sabores.sabor_id ?? 1);
     const [saborNombre, setSaborNombre] = useState<string | undefined>(sabor_producto[0]?.sabores.nombre ?? "Chocolate");
     const [vistaPreviaImagen, setVistaPreviaImagen] = useState<string | null>(null);
     const [imagenReferencia, setImagenReferencia] = useState<File | null>(null);
     const [detalleMiniCake, setDetalleMiniCake] = useState<string>('');
     const [rutaImagenReferencia, setRutaImagenReferencia] = useState<string | undefined>('');
-    const [metodoEnvio, setMetodoEnvio] = useState<string>("Retiro en domicilio");
     const [esconder, setEsconder] = useState<boolean>(false);
-    const [horaRetiro, setHoraRetiro] = useState<string>('');
 
     useEffect(() => {
         if (!atributosAcambiar) return;
 
         setUid(atributosAcambiar.uid);
-        setFechaEntrega(new Date(atributosAcambiar.fecha_entrega));
         setSabor_id(atributosAcambiar.sabor_id);
         setSaborNombre(atributosAcambiar.sabor_nombre);
         setRutaImagenReferencia(atributosAcambiar.ruta_imagen_referencia);
         setDetalleMiniCake(atributosAcambiar.detalle ?? '');
-        setMetodoEnvio(atributosAcambiar.metodo_envio);
         setImagenReferencia(null);
         setVistaPreviaImagen(null);
-        setHoraRetiro(atributosAcambiar.hora_retiro ?? '');
     }, [atributosAcambiar]);
 
     const isFormComplete = useMemo(() => {
         const tieneSabor = Number.isFinite(sabor_id) && sabor_id! > 0;
-        const tieneFecha = fechaEntrega instanceof Date && !isNaN(fechaEntrega.getTime());
-        const tieneMetodo = metodoEnvio.trim().length > 0;
-        const tieneHoraRetiro = metodoEnvio !== "Retiro en domicilio" || horaRetiro.trim().length > 0;
         const cumpleCamposExtra = !camposExtraRequeridos || (
             detalleMiniCake.trim().length > 0 &&
             (!!imagenReferencia || !!rutaImagenReferencia)
         );
-        return tieneSabor && tieneFecha && tieneMetodo && tieneHoraRetiro && cumpleCamposExtra;
-    }, [sabor_id, fechaEntrega, metodoEnvio, camposExtraRequeridos, detalleMiniCake, imagenReferencia, rutaImagenReferencia, horaRetiro]);
+        return tieneSabor && cumpleCamposExtra;
+    }, [sabor_id, camposExtraRequeridos, detalleMiniCake, imagenReferencia, rutaImagenReferencia]);
 
     const CapturarSaborIDyNombre = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const idSabor = Number(e.currentTarget.value);
@@ -109,7 +98,6 @@ export const FormularioMiniCake = ({ id, nombre, sabor_producto, tipo_formulario
         if (esconder) return;
 
         const imagenURL = imagenes_producto?.[0]?.url ?? "";
-        const fechaStr = fechaEntrega ? toLocalISODate(fechaEntrega) : "";
 
         if (editarItem) {
             if (imagenReferencia) {
@@ -121,16 +109,13 @@ export const FormularioMiniCake = ({ id, nombre, sabor_producto, tipo_formulario
                 uid,
                 user_id: sesion?.user.id,
                 nombre_producto: nombre,
-                fecha_entrega: fechaStr,
                 sabor_id,
                 sabor_nombre: saborNombre,
                 ruta_imagen_referencia: rutaArchivo,
                 detalle: detalleMiniCake,
-                metodo_envio: metodoEnvio,
                 imagen_url: imagenURL,
                 producto_id: id,
                 tipo_formulario,
-                hora_retiro: metodoEnvio === "Retiro en domicilio" ? horaRetiro : undefined,
             };
 
             await actualizarProductoCarrito(item);
@@ -152,16 +137,13 @@ export const FormularioMiniCake = ({ id, nombre, sabor_producto, tipo_formulario
                 nombre_producto: nombre,
                 tamano: 10,
                 tamano_id: 1,
-                fecha_entrega: fechaStr,
                 sabor_id,
                 sabor_nombre: saborNombre,
                 ruta_imagen_referencia: rutaArchivo,
                 detalle: detalleMiniCake,
-                metodo_envio: metodoEnvio,
                 imagen_url: imagenURL,
                 producto_id: id,
                 tipo_formulario,
-                hora_retiro: metodoEnvio === "Retiro en domicilio" ? horaRetiro : undefined,
             };
 
             await agregarProductoCarrito(item);
@@ -179,12 +161,6 @@ export const FormularioMiniCake = ({ id, nombre, sabor_producto, tipo_formulario
             className="bg-white rounded-2xl shadow-lg p-6 md:p-8 space-y-6 max-w-2xl mx-auto"
         >
             <h2 className="text-2xl font-bold text-gray-800 mb-6">Personaliza tu MiniCake</h2>
-
-            {/* Campo fecha de entrega */}
-            <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">Fecha de entrega</label>
-                <FechaEntregaPicker value={fechaEntrega} onChange={setFechaEntrega} minDaysFromToday={1} />
-            </div>
 
             {/* Campo sabor */}
             <div className="space-y-2">
@@ -244,35 +220,6 @@ export const FormularioMiniCake = ({ id, nombre, sabor_producto, tipo_formulario
                         <p className="text-xs text-gray-500">Especifica alergias, instrucciones de decoración o mensajes personalizados</p>
                     </div>
                 </>
-            )}
-
-            {/* Campo método de envío */}
-            <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">Método de envío</label>
-                <select
-                    value={metodoEnvio}
-                    onChange={(e) => setMetodoEnvio(e.target.value)}
-                    required
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none"
-                >
-                    <option value="Retiro en domicilio">Retiro en domicilio</option>
-                    <option value="UberFlash">UberFlash</option>
-                    <option value="Metro">Metro</option>
-                </select>
-            </div>
-
-            {/* Campo hora de retiro (solo si es Retiro en domicilio) */}
-            {metodoEnvio === "Retiro en domicilio" && (
-                <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-700">Hora de retiro</label>
-                    <input
-                        type="time"
-                        value={horaRetiro}
-                        onChange={(e) => setHoraRetiro(e.target.value)}
-                        required
-                        className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none"
-                    />
-                </div>
             )}
 
             {/* Botón agregar / actualizar */}

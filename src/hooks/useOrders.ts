@@ -14,13 +14,19 @@ export async function listarPedidosUsuario(): Promise<PedidoConItems[]>{
 
 const {data, error} = await supabase.from("pedidos")
     .select(`
-        id, usuario_id, fecha_solicitud, estado,
+        id,
+        usuario_id,
+        fecha_solicitud,
+        estado,
+        metodo_envio, 
+        hora_retiro, 
+        fecha_entrega,
         items_pedido(
             id, producto_id, subtotal,
             nombre:productos(nombre),
-            formulario_torta(id, item_pedido_id, tamano:tamano_producto(tamano), sabor_nombre:sabores(nombre), fecha_entrega, agregar_nombre_edad, metodo_envio, ruta_imagen_referencia, detalle, hora_retiro),
-            formulario_galletas(id, item_pedido_id, cantidad, ruta_imagen_referencia, detalle, fecha_entrega, metodo_envio, hora_retiro),
-            formulario_minicake(id, item_pedido_id, sabor_nombre:sabores(nombre), fecha_entrega, metodo_envio, ruta_imagen_referencia, detalle, hora_retiro)
+            formulario_torta(id, item_pedido_id, tamano:tamano_producto(tamano), sabor_nombre:sabores(nombre), agregar_nombre_edad, ruta_imagen_referencia, detalle),
+            formulario_galletas(id, item_pedido_id, cantidad, ruta_imagen_referencia, detalle),
+            formulario_minicake(id, item_pedido_id, sabor_nombre:sabores(nombre), ruta_imagen_referencia, detalle)
         )
     `)
     .eq("usuario_id", user.id)
@@ -61,7 +67,11 @@ const cabecera = filas[0]
         cliente_nombre: filas[0].cliente_nombre,
         cliente_apellido: filas[0].cliente_apellido,
         cliente_telefono: filas[0].cliente_telefono,
+        cliente_email: filas[0].cliente_email,
         estado: filas[0].estado as EstadoPedido | null,
+        metodo_envio: filas[0].pedido_metodo_envio,
+        hora_retiro: filas[0].pedido_hora_retiro,
+        fecha_entrega: filas[0].pedido_fecha_entrega,
     }
     : null;
 
@@ -76,16 +86,13 @@ const items = filas
     producto_id: f.producto_id,
     producto_nombre: f.producto_nombre,
     producto_imagen: f.producto_imagen,
-    fecha_entrega: f.fecha_entrega,
     tamano_personas: f.tamano_personas,
     sabor_nombre: f.sabor_nombre,
     agregar_nombre_edad: f.agregar_nombre_edad,
-    metodo_envio: f.metodo_envio,
     ruta_imagen_referencia: f.ruta_imagen_referencia,
     detalle: f.detalle,
     detalle_galletas: f.detalle_galletas,
     detalle_minicake: f.detalle_minicake,
-    hora_retiro: f.hora_retiro,
     }));
 
 return { cabecera, items };

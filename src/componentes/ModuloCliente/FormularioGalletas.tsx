@@ -5,8 +5,6 @@
     import { toast } from "react-toastify";
     import type { CarritoItem, PropsFormularioGalletas, UID } from "../../assets/types-interfaces/types";
     import { useCart } from "../Navegacion/useCart";
-    import FechaEntregaPicker from "./FechaEntregaPicker";
-    import { toLocalISODate } from "../../utils/fechas";
     import { comprimirImagen, eliminarImagenReferenciaSupabase, importarImagenReferenciaPorRuta, subirImagenReferenciaSupabase } from "../../hooks/useUploadImageSupabase";
 
     export const FormularioGalletas = ({id, nombre, tipo_formulario, imagenes_producto}: PropsFormularioGalletas) => {
@@ -25,13 +23,11 @@
 
     const [uid, setUid] = useState<UID>(`${""}-${""}-${""}-${""}-${""}`);
     const [cantidad, setCantidad] = useState<number | undefined>(1);
-    const [fechaEntrega, setFechaEntrega] = useState<Date | null>(null);
     const [vistaPreviaImagen, setVistaPreviaImagen] = useState<string | null>(null);
     const [imagenReferencia, setImagenReferencia] = useState<File | null>();
     const [detalleGalletas, setDetalleGalletas] = useState<string | undefined>('');
     const [rutaImagenReferencia, setRutaImagenReferencia] = useState<string | undefined>('');
-    const [metodoEnvio, setMetodoEnvio] = useState<string>("Retiro en domicilio");
-    const [horaRetiro, setHoraRetiro] = useState<string>('');
+
 
     const [esconder, setEsconder] = useState<boolean>(false);
 
@@ -41,25 +37,18 @@
         //Agregar campo galletas, verificar función de actualizar
         if (!atributosAcambiar) return;
         setUid(atributosAcambiar.uid);
-        setFechaEntrega(new Date(atributosAcambiar.fecha_entrega));
         setRutaImagenReferencia(atributosAcambiar.ruta_imagen_referencia);
         setDetalleGalletas(atributosAcambiar.detalle);
-        setMetodoEnvio(atributosAcambiar.metodo_envio);
         setCantidad(atributosAcambiar.cantidad);
         setImagenReferencia(null);
         setVistaPreviaImagen(null);
-        setHoraRetiro(atributosAcambiar.hora_retiro ?? '');
-
     }, [atributosAcambiar]);
 
     {/* Función para validar si el formulario está completo */}
     const isFormComplete = useMemo(() => {
         const tieneCantidad = cantidad! > 0;
-        const tieneFecha = fechaEntrega instanceof Date && !isNaN(fechaEntrega.getTime());
-        const tieneMetodo = metodoEnvio.trim().length > 0;
-        const tieneHoraRetiro = metodoEnvio !== "Retiro en domicilio" || horaRetiro.trim().length > 0;
-        return tieneCantidad && tieneFecha && tieneMetodo && tieneHoraRetiro;       
-    }, [cantidad, fechaEntrega, metodoEnvio, horaRetiro]);
+        return tieneCantidad;       
+    }, [cantidad]);
 
 
     const validarImagen = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -116,7 +105,6 @@
         if (esconder) return;
 
         const imagenURL = imagenes_producto?.[0]?.url ?? "";
-        const fechaStr = fechaEntrega ? toLocalISODate(fechaEntrega) : "";
 
 
         {/* Sí editamos al item se asigna los valores previamente capturados*/}
@@ -134,14 +122,11 @@
             uid,
             user_id: sesion?.user.id,
             nombre_producto: nombre,
-            fecha_entrega: fechaStr,
             ruta_imagen_referencia: rutaArchivo,
-            metodo_envio: metodoEnvio,
             imagen_url: imagenURL,
             producto_id: id,
             tipo_formulario,
             cantidad: cantidad ?? 1,
-            hora_retiro: metodoEnvio === "Retiro en domicilio" ? horaRetiro : undefined,
         };
 
 
@@ -170,15 +155,12 @@
             uid: nuevoUid,
             user_id: sesion?.user.id,
             nombre_producto: nombre,
-            fecha_entrega: fechaStr,
             ruta_imagen_referencia: rutaArchivo,
             detalle: detalleGalletas,
-            metodo_envio: metodoEnvio,
             imagen_url: imagenURL,
             producto_id: id,
             tipo_formulario,
             cantidad: cantidad ?? 1,
-            hora_retiro: metodoEnvio === "Retiro en domicilio" ? horaRetiro : undefined,
         };
 
         await agregarProductoCarrito(item);
@@ -211,16 +193,6 @@
             onChange={(e) => setCantidad(+e.target.value)}
             className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none resize-none" />
         </div>
-
-
-        {/* Campo fecha entrega */}
-
-        <div className="space-y-2">
-            <label className="block text-sm font-semibold text-gray-700">Fecha de entrega</label>
-            <FechaEntregaPicker value={fechaEntrega} onChange={setFechaEntrega} minDaysFromToday={1} />
-        </div>
-
-
 
         {/* Campo imagen de referencia y vista previa de la imagen (Solo aparece si el título de galletas tiene "crea") */}
 
@@ -276,40 +248,6 @@
 
         )}
 
-
-        {/* Campo desea agregar nombre y/o edad */}
-
-
-        {/* Campo método de envío */}
-
-        <div className="space-y-2">
-            <label className="block text-sm font-semibold text-gray-700">Método de envío</label>
-            <select
-            value={metodoEnvio}
-            onChange={(e) => setMetodoEnvio(e.target.value)}
-            required
-            className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none"
-            >
-            {/* Alineado con el estado inicial */}
-            <option value="Retiro en domicilio">Retiro en domicilio</option>
-            <option value="UberFlash">UberFlash</option>
-            <option value="Metro">Metro</option>
-            </select>
-        </div>
-
-        {/* Campo hora de retiro (solo si es Retiro en domicilio) */}
-        {metodoEnvio === "Retiro en domicilio" && (
-            <div className="space-y-2">
-                <label className="block text-sm font-semibold text-gray-700">Hora de retiro</label>
-                <input
-                    type="time"
-                    value={horaRetiro}
-                    onChange={(e) => setHoraRetiro(e.target.value)}
-                    required
-                    className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none"
-                />
-            </div>
-        )}
 
         {/* Botón agregar al carrito / actualizar producto */}
 

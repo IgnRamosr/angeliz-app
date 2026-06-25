@@ -5,12 +5,14 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "../componentes/Navegacion/useCart";
 import { generaSolicitud } from "../hooks/useCheckoutFunction";
 import { toast } from "react-toastify";
-import { Cake, Calendar, Edit3, ShoppingBag, Trash2, Users, Stars, ChevronDown, ChevronUp, Package, Clock } from "lucide-react";
+import { Cake, Edit3, ShoppingBag, Trash2, Users, Stars, ChevronDown, ChevronUp, Package } from "lucide-react";
 import { useRef } from "react";
 import  FormularioContacto, {type FormularioContactoRef}  from "../componentes/ModuloCliente/FormularioContacto";
 import { supabase } from "../supabase/supabaseClient";
 import type { datosFormContacto } from '../assets/types-interfaces/interfaces';
 import { eliminarImagenReferenciaSupabase, importarImagenReferenciaPorRuta  } from "../hooks/useUploadImageSupabase";
+import FechaEntregaPicker from "../componentes/ModuloCliente/FechaEntregaPicker";
+import { toLocalISODate } from "../utils/fechas";
 
 
 
@@ -22,6 +24,9 @@ export const CarritoDeCompras = () => {
   const [loading, setLoading] = useState(true);
   const [detalleAbierto, setDetalleAbierto] = useState<string | null>(null);
   const [confirmando, setConfirmando] = useState(false);
+  const [metodoEnvio, setMetodoEnvio] = useState<string>("Retiro en domicilio");
+  const [horaRetiro, setHoraRetiro] = useState<string>("");
+  const [fechaEntrega, setFechaEntrega] = useState<Date | null>(null);
   const {eliminarItem} = useCart();
   const redirigir = useNavigate();
 
@@ -31,31 +36,50 @@ export const CarritoDeCompras = () => {
   
   
 
-  const manejarConfirmacion = async () => {
-      if (confirmando) return;
-      setConfirmando(true);
-      try {
-          let datos: datosFormContacto | undefined = undefined;
-          if (sesion) {
-              const res = refContacto.current?.getdatosFormContacto();
-              if (!res) {
-                  setConfirmando(false);
-                  return;
-              }
-              datos = res;
-          }
-          await generaSolicitud(items, datos);
-          vaciarCarrito();
-          vaciarProductosCarrito();
-          redirigir("/solicitudExitosa");
-      } catch (e) {
-          console.error(e);
-          toast.clearWaitingQueue();
-          toast.error("Ocurrió un error al generar la solicitud");
-          setConfirmando(false);
-          redirigir("/");
-      }
-  };
+const manejarConfirmacion = async () => {
+    if (confirmando) return;
+
+    if (!fechaEntrega) {
+        toast.warning("Selecciona la fecha de entrega.");
+        return;
+    }
+
+
+    if (!horaRetiro.trim()) {
+    toast.warning("Indica la hora de entrega.");
+    return;
+}
+
+    setConfirmando(true);
+    try {
+        let datos: datosFormContacto | undefined = undefined;
+        if (sesion) {
+            const res = refContacto.current?.getdatosFormContacto();
+            if (!res) {
+                setConfirmando(false);
+                return;
+            }
+            datos = res;
+        }
+
+        const datosEnvio = {
+            metodoEnvio,
+            horaRetiro,
+            fechaEntrega: toLocalISODate(fechaEntrega),
+        };
+
+        await generaSolicitud(items, datos, datosEnvio);
+        vaciarCarrito();
+        vaciarProductosCarrito();
+        redirigir("/solicitudExitosa");
+    } catch (e) {
+        console.error(e);
+        toast.clearWaitingQueue();
+        toast.error("Ocurrió un error al generar la solicitud");
+        setConfirmando(false);
+        redirigir("/");
+    }
+};
 
 
 
@@ -65,6 +89,7 @@ export const CarritoDeCompras = () => {
           const sesion = await supabase.auth.getUser();
           setSession(sesion.data.user?.is_anonymous);
           const item = await listarProductosCarrito();
+          console.log(item);
           setItems(item);
       } catch (e) {
           console.error(e);
@@ -97,11 +122,8 @@ export const CarritoDeCompras = () => {
       sabor_nombre: itemAEditar.sabor_nombre,
       ruta_imagen_referencia: itemAEditar.ruta_imagen_referencia,
       detalle: itemAEditar.detalle,
-      fecha_entrega: itemAEditar.fecha_entrega,
-      metodo_envio: itemAEditar.metodo_envio,
       agregaNombreEdad: itemAEditar.agregaNombreEdad,
-      cantidad: itemAEditar.cantidad,
-      hora_retiro: itemAEditar.hora_retiro
+      cantidad: itemAEditar.cantidad
     };
 
     redirigir(`/producto/${item.producto_id}?editar=${item.uid}`, { state: { atributosAcambiar } });
@@ -197,19 +219,6 @@ export const CarritoDeCompras = () => {
                             </div>
                         )}
 
-                        {/* Fecha entrega — todos */}
-                        <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4 text-[#f57fa6]" />
-                            <span><strong>Entrega:</strong> {item.fecha_entrega.split('T')[0].split('-').reverse().join('/')}</span>
-                        </div>
-
-                        {/* Hora retiro — todos, solo si existe */}
-                        {item.hora_retiro && (
-                            <div className="flex items-center gap-2">
-                                <Clock className="w-4 h-4 text-[#f57fa6]" />
-                                <span><strong>Hora retiro:</strong> {item.hora_retiro}</span>
-                            </div>
-                        )}
 
                         {/* Nombre/edad — solo torta */}
                         {item.tipo_formulario === 'torta' && (
@@ -281,6 +290,39 @@ export const CarritoDeCompras = () => {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-md p-4 sm:p-6 mb-6 space-y-4">
+          <h3 className="text-lg font-bold text-gray-800">Datos de entrega del pedido</h3>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">Fecha de entrega</label>
+            <FechaEntregaPicker value={fechaEntrega} onChange={setFechaEntrega} minDaysFromToday={1} />
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">Método de envío</label>
+            <select
+              value={metodoEnvio}
+              onChange={(e) => setMetodoEnvio(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none"
+            >
+              <option value="Retiro en domicilio">Retiro en domicilio</option>
+              <option value="UberFlash">UberFlash</option>
+              <option value="Metro cerro blanco">Metro Cerro Blanco</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-700">Hora de entrega</label>
+            <input
+              type="time"
+              value={horaRetiro}
+              onChange={(e) => setHoraRetiro(e.target.value)}
+              required
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none"
+            />
+          </div>
         </div>
 
         {sesion &&(

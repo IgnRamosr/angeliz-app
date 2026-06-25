@@ -1,6 +1,6 @@
 //Funciones para interactuar con el carrito
 
-import type { CarritoItem } from "../assets/types-interfaces/types";
+import type { CarritoItem, DatosEnvioPedido  } from "../assets/types-interfaces/types";
 import type { datosFormContacto } from '../assets/types-interfaces/interfaces';
 import { supabase } from "../supabase/supabaseClient"
 
@@ -54,10 +54,17 @@ const promoverCuentaAnonima = async (correo: string, password: string) => {
 };
 
 
-const insertarPedido = async (usuarioId: string | undefined, contactoId: number | null) => {
+const insertarPedido = async (usuarioId: string | undefined, contactoId: number | null, datosEnvio: DatosEnvioPedido) => {
     const {data, error} = await supabase
     .from("pedidos")
-    .insert({usuario_id: usuarioId, fecha_solicitud: new Date().toISOString(), contacto_id:contactoId})
+    .insert({
+        usuario_id: usuarioId,
+        fecha_solicitud: new Date().toISOString(),
+        contacto_id: contactoId,
+        metodo_envio: datosEnvio.metodoEnvio,
+        hora_retiro: datosEnvio.horaRetiro ?? null,
+        fecha_entrega: datosEnvio.fechaEntrega,
+    })
     .select("id").single();
 
     if(error){
@@ -95,12 +102,7 @@ const insertarFormulario = async (itemsCarrito: CarritoItem[], idsItemsPedido: n
     tamano_id: item.tamano_id, 
     sabor_id: item.sabor_id, 
     ruta_imagen_referencia: item.ruta_imagen_referencia, 
-    detalle: item.detalle, 
-    fecha_entrega: item.fecha_entrega, 
-    agregar_nombre_edad:item.agregaNombreEdad, 
-    metodo_envio: item.metodo_envio,
-    hora_retiro: item.hora_retiro,
-
+    detalle: item.detalle
     }));
 
     const filasGalletas = itemsCarrito
@@ -110,10 +112,7 @@ const insertarFormulario = async (itemsCarrito: CarritoItem[], idsItemsPedido: n
     item_pedido_id,
     cantidad: item.cantidad,
     ruta_imagen_referencia: item.ruta_imagen_referencia, 
-    detalle: item.detalle, 
-    fecha_entrega: item.fecha_entrega, 
-    metodo_envio: item.metodo_envio,
-    hora_retiro: item.hora_retiro
+    detalle: item.detalle
 
     }));
 
@@ -124,10 +123,7 @@ const insertarFormulario = async (itemsCarrito: CarritoItem[], idsItemsPedido: n
         item_pedido_id,
         sabor_id: item.sabor_id,
         ruta_imagen_referencia: item.ruta_imagen_referencia,
-        detalle: item.detalle,
-        fecha_entrega: item.fecha_entrega,
-        metodo_envio: item.metodo_envio,
-        hora_retiro: item.hora_retiro,
+        detalle: item.detalle
     }));
 
 const { error: errorTortas } = await supabase.from("formulario_torta").insert(filasTortas);
@@ -156,30 +152,26 @@ async function asegurarPerfil(userId: string | undefined) {
 }
 
 
-export async function generaSolicitud (itemsCarrito: CarritoItem[], contacto?: datosFormContacto) {
-
+export async function generaSolicitud (itemsCarrito: CarritoItem[], contacto: datosFormContacto | undefined, datosEnvio: DatosEnvioPedido) {
     const usuarioID = await obtenerUsuario();
-
     let contactoId: number | null = null;
 
-        if (await esAnonimo()) {
-            await asegurarPerfil(usuarioID);
+    if (await esAnonimo()) {
+        await asegurarPerfil(usuarioID);
         if (contacto) {
-        contactoId = await guardarContacto(usuarioID, contacto);
-        if (contacto.crearCuenta) {
-            await promoverCuentaAnonima(contacto.email!, contacto.password!);
-        }
+            contactoId = await guardarContacto(usuarioID, contacto);
+            if (contacto.crearCuenta) {
+                await promoverCuentaAnonima(contacto.email!, contacto.password!);
+            }
         }
     }
 
-    const pedidoID = await insertarPedido(usuarioID,contactoId);
-
+    const pedidoID = await insertarPedido(usuarioID, contactoId, datosEnvio);
     const idsItems = await insertarItemsPedido(pedidoID, itemsCarrito);
-
     await insertarFormulario(itemsCarrito, idsItems);
 
     supabase.functions.invoke("notificar-telegram", {
-    body: { pedidoId: pedidoID },
+        body: { pedidoId: pedidoID },
     }).catch((e) => console.warn("No se pudo notificar por Telegram:", e?.message));
 
     return pedidoID;
