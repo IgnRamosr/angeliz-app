@@ -46,7 +46,7 @@
 
     {/* Función para validar si el formulario está completo */}
     const isFormComplete = useMemo(() => {
-        const tieneCantidad = cantidad! > 0;
+        const tieneCantidad = !!cantidad && cantidad > 0;
         return tieneCantidad;       
     }, [cantidad]);
 
@@ -189,8 +189,11 @@
         <div className="space-y-2">
             <label className="block text-sm font-semibold text-gray-700">Cantidad</label>
             <input type="number" min={1} max={99}
-            value={cantidad}
-            onChange={(e) => setCantidad(+e.target.value)}
+            value={cantidad ?? ''}
+            onChange={(e) => {
+                const val = e.target.value;
+                setCantidad(val === '' ? undefined : Number(val));
+            }}
             className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none resize-none" />
         </div>
 

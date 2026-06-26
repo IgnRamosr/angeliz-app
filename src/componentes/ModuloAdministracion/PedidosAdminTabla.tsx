@@ -2,7 +2,7 @@
 import { usePedidosAdmin } from "../../hooks/usePedidosAdmin";
 import type { EstadoPedido, PedidoResumen } from "../../assets/types-interfaces/types";
 import { Link } from "react-router-dom";
-import { Calendar, User, Phone, FileText, Loader2, Package, Search, ArrowUpDown, Tag } from "lucide-react";
+import { Calendar, User, Phone, FileText, Loader2, Package, Search, ArrowUpDown, Tag, Clock  } from "lucide-react";
 
 const ESTADO_ESTILOS: Record<EstadoPedido, string> = {
   "En revisión":  "bg-amber-100 text-amber-800 border border-amber-300",
@@ -268,6 +268,15 @@ const pedidosFiltrados = useMemo(() => {
                     )}
                   </div>
                 </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Clock className="w-4 h-4 text-indigo-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs text-gray-500 font-medium mb-0.5">Hora de retiro</p>
+                    <p className="text-sm text-gray-900 font-semibold">{p.hora_retiro ?? "—"}</p>
+                  </div>
+                </div>
               </div>
 
               <div className="mt-4 pt-3 border-t border-gray-200">
@@ -326,6 +335,12 @@ const pedidosFiltrados = useMemo(() => {
                       <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Estado</span>
                     </div>
                   </th>
+                  <th className="px-6 py-4 text-left">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-indigo-500" />
+                      <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Hora retiro</span>
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -375,6 +390,9 @@ const pedidosFiltrados = useMemo(() => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <BadgeEstado estado={p.estado} />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-sm text-gray-700 font-medium">{p.hora_retiro ?? "—"}</span>
                     </td>
                   </tr>
                 ))}

@@ -67,7 +67,7 @@ export type FormularioGalletas = {id: number; item_pedido_id: number; cantidad: 
 
 export type FormularioMiniCake = { id: number; item_pedido_id: number; sabor_nombre: Sabor; fecha_entrega: string; metodo_envio: string; ruta_imagen_referencia?: string; detalle?: string };
 
-export type PedidoResumen = {id: number; usuario_id: string | null; fecha_solicitud: string | null; creado_en: string | null; contacto_nombre: string | null; contacto_apellido: string | null; contacto_telefono: string | null; estado: EstadoPedido | null;};
+export type PedidoResumen = {id: number; usuario_id: string | null; fecha_solicitud: string | null; creado_en: string | null; contacto_nombre: string | null; contacto_apellido: string | null; contacto_telefono: string | null; estado: EstadoPedido | null; hora_retiro: string | null};
 
 export type Subcategoria = { id: number; nombre: string, visible: boolean };
 

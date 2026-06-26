@@ -300,28 +300,30 @@
         {/* Campo desea agregar nombre y/o edad */}
 
         <div className="space-y-3">
-            <label className="flex items-center gap-2 cursor-pointer group">
-                <input
-                checked={agregaNombreEdad === true}
-                type="radio"
-                name="agregar_datos"
-                onChange={() => setagregaNombreEdad(true)}
-                className="w-4 h-4 text-pink-600 focus:ring-[#f57fa6] cursor-pointer"
-                />
-                <span className="text-gray-700 group-hover:text-gray-900 transition-colors">Sí</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer group">
-                <input
-                checked={agregaNombreEdad === false}
-                type="radio"
-                name="agregar_datos"
-                onChange={() => setagregaNombreEdad(false)}
-                className="w-4 h-4 text-[#f57fa6] focus:ring-[#f57fa6] cursor-pointer"
-                />
-                <span className="text-gray-700 group-hover:text-gray-900 transition-colors">No</span>
-            </label>
+            <label className="block text-sm font-semibold text-gray-700">¿Desea agregar nombre y/o edad?</label>
+            <div className="flex gap-6">
+                <label className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                    checked={agregaNombreEdad === true}
+                    type="radio"
+                    name="agregar_datos"
+                    onChange={() => setagregaNombreEdad(true)}
+                    className="w-4 h-4 text-pink-600 focus:ring-[#f57fa6] cursor-pointer"
+                    />
+                    <span className="text-gray-700 group-hover:text-gray-900 transition-colors">Sí</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer group">
+                    <input
+                    checked={agregaNombreEdad === false}
+                    type="radio"
+                    name="agregar_datos"
+                    onChange={() => setagregaNombreEdad(false)}
+                    className="w-4 h-4 text-[#f57fa6] focus:ring-[#f57fa6] cursor-pointer"
+                    />
+                    <span className="text-gray-700 group-hover:text-gray-900 transition-colors">No</span>
+                </label>
+            </div>
         </div>
-
 
         {/* Botón agregar al carrito / actualizar producto */}
 

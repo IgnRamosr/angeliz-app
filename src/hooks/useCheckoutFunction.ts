@@ -102,7 +102,8 @@ const insertarFormulario = async (itemsCarrito: CarritoItem[], idsItemsPedido: n
     tamano_id: item.tamano_id, 
     sabor_id: item.sabor_id, 
     ruta_imagen_referencia: item.ruta_imagen_referencia, 
-    detalle: item.detalle
+    detalle: item.detalle,
+    agregar_nombre_edad: item.agregaNombreEdad,
     }));
 
     const filasGalletas = itemsCarrito

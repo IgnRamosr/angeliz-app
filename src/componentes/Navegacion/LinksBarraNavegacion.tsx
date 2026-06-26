@@ -14,7 +14,7 @@ export const LinksBarraNavegacion = ({ sesion, columna, cerrarAlClickearItem}: L
     const [abierto, setAbierto] = useState(false);
     const caja = useRef<HTMLLIElement>(null);
 
-    const validarUsuario = sesion?.user.is_anonymous;
+    const validarUsuario = !sesion || sesion.user.is_anonymous;
 
     useEffect(() => {
     const onClick = (e: MouseEvent) => {

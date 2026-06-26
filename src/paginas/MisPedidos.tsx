@@ -4,6 +4,7 @@ import type { PedidoConItems, EstadoPedido } from "../assets/types-interfaces/ty
 import {
   Package, Calendar, Cake, Users, Truck,
   Clock, ChevronDown, ChevronUp, Cookie, ImageIcon, X,
+  Stars,
 } from "lucide-react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useUserRole } from "../hooks/useUserProfile";
@@ -119,6 +120,7 @@ const DetalleTorta = ({ ft, nombre, mostrarTamano = true, bucket = "torta" }: {
     const rows = [
         ...(mostrarTamano ? [{ icon: <Users className="w-4 h-4 text-purple-600" />, bg: "bg-purple-100", label: "Personas", value: ft.tamano?.tamano ?? "—" }] : []),
         { icon: <Cake     className="w-4 h-4 text-pink-600"  />, bg: "bg-pink-100",  label: "Sabor",   value: ft.sabor_nombre?.nombre ?? "—" },
+        { icon: <Stars    className="w-4 h-4 text-amber-600" />, bg: "bg-amber-100", label: "Nombre/edad", value: ft.agregar_nombre_edad == null ? "—" : ft.agregar_nombre_edad ? "Sí" : "No" },
     ];
 
     return (
@@ -158,7 +160,12 @@ type Row = { icon: React.ReactNode; bg: string; label: string; value: string | n
 const DetalleGrid = ({ rows }: { rows: Row[] }) => (
   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
     {rows.map(({ icon, bg, label, value }) => (
-      <div key={label} className="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow">
+      <div
+        key={label}
+        className={`bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow ${
+          rows.length === 1 ? "sm:col-span-2" : ""
+        }`}
+      >
         <div className="flex items-start gap-2">
           <div className={`${bg} p-1.5 rounded-lg flex-shrink-0`}>{icon}</div>
           <div className="min-w-0 flex-1">
