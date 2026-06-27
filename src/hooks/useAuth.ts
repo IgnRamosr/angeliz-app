@@ -16,23 +16,24 @@ export const useAutenticacion = () => {
    * - Si NO hay usuario o no es anónimo → signUp
    * - Si HAY usuario anónimo → updateUser (promover)
    */
-  const registrarse = async ({ email, password }: ParametrosAutenticacion) => {
+const registrarse = async ({ email, password }: ParametrosAutenticacion) => {
     const anon = await esAnonimoActual();
 
     if (anon) {
-      // Promueve la sesión anónima a email+password
       const res = await supabase.auth.updateUser({ email, password });
-      return res; // { data, error }
+      if (!res.error) localStorage.removeItem("anon_session");
+      return res;
     } else {
-      // Registro normal
       const res = await supabase.auth.signUp({ email, password });
-      return res; // { data, error }
+      return res;
     }
-  };
+};
 
   // Si alguna vez necesitas forzar explícitamente la promoción
   const promoverAnonimo = async ({ email, password }: ParametrosAutenticacion) => {
-    return await supabase.auth.updateUser({ email, password });
+      const res = await supabase.auth.updateUser({ email, password });
+      if (!res.error) localStorage.removeItem("anon_session");
+      return res;
   };
 
   const iniciarSesion = async ({ email, password }: ParametrosAutenticacion) => {
@@ -46,7 +47,7 @@ const cerrarSesion = async () => {
     if (sesionAnonima) {
       const s = JSON.parse(sesionAnonima);
       if (s?.access_token && s?.refresh_token) {
-        const { data, error } = await supabase.auth.setSession({
+        const { error } = await supabase.auth.setSession({
           access_token: s.access_token,
           refresh_token: s.refresh_token,
         });
@@ -69,7 +70,7 @@ const cerrarSesion = async () => {
     }
 };
 
-  const asignarSesionAnonima = async () => {
+const asignarSesionAnonima = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (session) return session;
 
@@ -81,11 +82,19 @@ const cerrarSesion = async () => {
           access_token: s.access_token,
           refresh_token: s.refresh_token,
         });
-        if (!error) return data.session;
+
+        if (!error) {
+          const { error: errUser } = await supabase.auth.getUser();
+          if (!errUser) return data.session; // sesión realmente válida
+        }
+
+        // Tokens corruptos/caducados: limpiar y seguir
+        localStorage.removeItem("anon_session");
+        await supabase.auth.signOut();
       }
     }
 
-    // Crear nueva sesión anónima (si está disponible en tu versión del SDK)
+    // Crear nueva sesión anónima
     const { data, error } = await supabase.auth.signInAnonymously();
     if (error) throw error;
 
@@ -99,7 +108,7 @@ const cerrarSesion = async () => {
     );
 
     return data.session;
-  };
+};
 
   return { registrarse, promoverAnonimo, iniciarSesion, cerrarSesion, asignarSesionAnonima };
 };

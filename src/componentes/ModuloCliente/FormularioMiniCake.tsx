@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useCartFunctions } from "../../hooks/useCartFunctions";
 import useUserSession from "../../hooks/useUserSession";
 import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
+import { X, Loader2 } from "lucide-react";
 import type { CarritoItem, PropsFormularioMiniCake, UID } from "../../assets/types-interfaces/types";
 import { useCart } from "../Navegacion/useCart";
 import { comprimirImagen, eliminarImagenReferenciaSupabase, importarImagenReferenciaPorRuta, subirImagenReferenciaSupabase } from "../../hooks/useUploadImageSupabase";
@@ -34,6 +35,9 @@ export const FormularioMiniCake = ({ id, nombre, sabor_producto, tipo_formulario
     const [detalleMiniCake, setDetalleMiniCake] = useState<string>('');
     const [rutaImagenReferencia, setRutaImagenReferencia] = useState<string | undefined>('');
     const [esconder, setEsconder] = useState<boolean>(false);
+    const [imagenFueEliminada, setImagenFueEliminada] = useState(false);
+    const [procesandoImagen, setProcesandoImagen] = useState(false);
+    const inputImagenRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         if (!atributosAcambiar) return;
@@ -79,9 +83,23 @@ export const FormularioMiniCake = ({ id, nombre, sabor_producto, tipo_formulario
             return;
         }
 
-        const archivoComprimido = await comprimirImagen(archivo);
-        setImagenReferencia(archivoComprimido);
-        setVistaPreviaImagen(URL.createObjectURL(archivoComprimido));
+        setProcesandoImagen(true);
+        try {
+            const archivoComprimido = await comprimirImagen(archivo);
+            setImagenReferencia(archivoComprimido);
+            setVistaPreviaImagen(URL.createObjectURL(archivoComprimido));
+            setImagenFueEliminada(false);
+        } finally {
+            setProcesandoImagen(false);
+        }
+    };
+
+    const quitarImagen = () => {
+        setImagenReferencia(null);
+        setVistaPreviaImagen(null);
+        setRutaImagenReferencia(undefined);
+        setImagenFueEliminada(true);
+        if (inputImagenRef.current) inputImagenRef.current.value = '';
     };
 
     const enviarFormulario = async (e: React.FormEvent) => {
@@ -101,8 +119,13 @@ export const FormularioMiniCake = ({ id, nombre, sabor_producto, tipo_formulario
 
         if (editarItem) {
             if (imagenReferencia) {
-                await eliminarImagenReferenciaSupabase(uid, tipo_formulario);
+                if (rutaImagenReferencia) await eliminarImagenReferenciaSupabase(uid, tipo_formulario);
                 rutaArchivo = await subirImagenReferenciaSupabase(imagenReferencia, sesion?.user.id, tipo_formulario);
+            } else if (imagenFueEliminada) {
+                await eliminarImagenReferenciaSupabase(uid, tipo_formulario);
+                rutaArchivo = undefined;
+            } else {
+                rutaArchivo = rutaImagenReferencia;
             }
 
             const item = {
@@ -190,17 +213,38 @@ export const FormularioMiniCake = ({ id, nombre, sabor_producto, tipo_formulario
                         <input
                             type="file"
                             accept=".jpg,.png,.jpeg"
+                            ref={inputImagenRef}
+                            disabled={procesandoImagen}
                             onChange={validarImagen}
                             required={camposExtraRequeridos && !editarItem}
-                            className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none"
+                            className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none disabled:opacity-60"
                         />
+                        {procesandoImagen && (
+                            <div className="flex items-center gap-2 text-sm text-[#6F2521] mt-2">
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                Procesando imagen, espera un momento…
+                            </div>
+                        )}
                     </div>
 
-                    {vistaPreviaImagen ? (
-                        <img src={vistaPreviaImagen} alt="Preview imagen seleccionada" style={{ maxWidth: 200 }} />
-                    ) : rutaImagenReferencia ? (
-                        <img src={importarImagenReferenciaPorRuta(rutaImagenReferencia, tipo_formulario)} alt="Imagen de referencia guardada" style={{ maxWidth: 200 }} />
-                    ) : null}
+                    {(vistaPreviaImagen || rutaImagenReferencia) && (
+                        <div className="relative inline-block">
+                            <img
+                                src={vistaPreviaImagen ?? importarImagenReferenciaPorRuta(rutaImagenReferencia!, tipo_formulario)}
+                                alt="Imagen de referencia"
+                                style={{ maxWidth: 200 }}
+                                className="rounded-lg border border-gray-200"
+                            />
+                            <button
+                                type="button"
+                                onClick={quitarImagen}
+                                className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md transition-colors"
+                                title="Quitar imagen"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                    )}
 
                     <div className="space-y-2">
                         <label className="block text-sm font-semibold text-gray-700">
@@ -225,8 +269,8 @@ export const FormularioMiniCake = ({ id, nombre, sabor_producto, tipo_formulario
             {/* Botón agregar / actualizar */}
             <button
                 type="submit"
-                disabled={esconder || !isFormComplete}
-                aria-disabled={esconder || !isFormComplete}
+                disabled={esconder || !isFormComplete || procesandoImagen}
+                aria-disabled={esconder || !isFormComplete || procesandoImagen}
                 title={!isFormComplete ? "Completa todos los campos para continuar" : ""}
                 className="w-full bg-gradient-to-r from-pink-500 to-purple-600 text-white font-semibold py-4 rounded-lg hover:cursor-pointer transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg mt-2"
             >

@@ -126,6 +126,12 @@ const DetalleTorta = ({ ft, nombre, mostrarTamano = true, bucket = "torta" }: {
     return (
         <>
             <DetalleGrid rows={rows} />
+            {ft.detalle && (
+                <div className="bg-white rounded-lg p-3 shadow-sm mt-2">
+                    <span className="font-semibold text-gray-700 text-xs sm:text-sm block mb-1">Detalle</span>
+                    <p className="text-gray-600 text-sm whitespace-pre-wrap">{ft.detalle}</p>
+                </div>
+            )}
             {(nombre.toLowerCase().includes('crea') || nombre.toLowerCase().includes('minicake')) && ft.ruta_imagen_referencia && (
                 <BotonVerImagen ruta={ft.ruta_imagen_referencia} bucket={bucket} />
             )}

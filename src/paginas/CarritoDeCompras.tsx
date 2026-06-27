@@ -89,7 +89,6 @@ const manejarConfirmacion = async () => {
           const sesion = await supabase.auth.getUser();
           setSession(sesion.data.user?.is_anonymous);
           const item = await listarProductosCarrito();
-          console.log(item);
           setItems(item);
       } catch (e) {
           console.error(e);
