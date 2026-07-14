@@ -41,10 +41,8 @@ export const ProveedorFuncionesCarrito  = ({children}:{children: ReactNode}) => 
                     user_id: accion.parametro.user_id,
                     nombre_producto: accion.parametro.nombre_producto,
                     tamano: accion.parametro.tamano,
-                    fecha_entrega: accion.parametro.fecha_entrega,
                     sabor_nombre: accion.parametro.sabor_nombre,
                     agregaNombreEdad:accion.parametro.agregaNombreEdad,
-                    metodo_envio: accion.parametro.metodo_envio,
                     imagen_url: accion.parametro.imagen_url,
                     producto_id: accion.parametro.producto_id,
                     sabor_id: accion.parametro.sabor_id} : item)

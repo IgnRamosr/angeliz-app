@@ -1,6 +1,6 @@
 //Funciones para interactuar con el carrito
 
-import type { CarritoItem, DatosEnvioPedido  } from "../assets/types-interfaces/types";
+import type { CarritoItem, DatosEntregaDelivery, DatosEnvioPedido  } from "../assets/types-interfaces/types";
 import type { datosFormContacto } from '../assets/types-interfaces/interfaces';
 import { supabase } from "../supabase/supabaseClient"
 
@@ -153,7 +153,26 @@ async function asegurarPerfil(userId: string | undefined) {
 }
 
 
-export async function generaSolicitud (itemsCarrito: CarritoItem[], contacto: datosFormContacto | undefined, datosEnvio: DatosEnvioPedido) {
+const insertarDetalleEntrega = async (pedidoId: number, datos: DatosEntregaDelivery) => {
+    const { error } = await supabase.from("pedido_delivery_detalle").insert({
+        pedido_id: pedidoId,
+        direccion: datos.direccion,
+        comuna: datos.comuna,
+        calle_referencia: datos.calleReferencia?.trim() || null,
+        depto_o_casa: datos.deptoOCasa,
+        observacion: datos.observacion?.trim() || null,
+        recibe_pedido_titular: datos.recibePedidoTitular,
+        receptor_nombre: datos.recibePedidoTitular ? null : datos.receptorNombre,
+        receptor_apellido: datos.recibePedidoTitular ? null : datos.receptorApellido,
+        receptor_telefono: datos.recibePedidoTitular ? null : datos.receptorTelefono,
+    });
+
+    if (error) {
+        console.error("Error insertando detalle de entrega:", error.message);
+    }
+};
+
+export async function generaSolicitud (itemsCarrito: CarritoItem[], contacto: datosFormContacto | undefined, datosEnvio: DatosEnvioPedido, datosEntrega?: DatosEntregaDelivery,) {
     const usuarioID = await obtenerUsuario();
     let contactoId: number | null = null;
 
@@ -166,10 +185,15 @@ export async function generaSolicitud (itemsCarrito: CarritoItem[], contacto: da
             }
         }
     }
+    
 
     const pedidoID = await insertarPedido(usuarioID, contactoId, datosEnvio);
     const idsItems = await insertarItemsPedido(pedidoID, itemsCarrito);
     await insertarFormulario(itemsCarrito, idsItems);
+
+        if (datosEntrega) {
+        await insertarDetalleEntrega(pedidoID, datosEntrega);
+    }
 
     supabase.functions.invoke("notificar-telegram", {
         body: { pedidoId: pedidoID },

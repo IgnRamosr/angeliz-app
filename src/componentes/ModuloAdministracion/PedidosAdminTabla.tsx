@@ -1,22 +1,45 @@
 // src/componentes/PedidosAdminTabla.tsx
 import { usePedidosAdmin } from "../../hooks/usePedidosAdmin";
-import type { EstadoPedido, PedidoResumen } from "../../assets/types-interfaces/types";
+import type {
+  EstadoPedido,
+  PedidoResumen,
+} from "../../assets/types-interfaces/types";
 import { Link } from "react-router-dom";
-import { Calendar, User, Phone, FileText, Loader2, Package, Search, ArrowUpDown, Tag, Clock  } from "lucide-react";
+import {
+  Calendar,
+  User,
+  Phone,
+  FileText,
+  Loader2,
+  Package,
+  Search,
+  ArrowUpDown,
+  Tag,
+  Clock,
+  Download,
+  CheckSquare,
+  Square,
+  FileSpreadsheet,
+} from "lucide-react";
+import { generarPdfEntrega } from "../../utils/pdfEntrega";
+import { obtenerDetallesEntregaPorPedidos } from "../../hooks/useOrders";
+import { descargarExcelEntrega } from "../../utils/excelEntrega";
 
 const ESTADO_ESTILOS: Record<EstadoPedido, string> = {
-  "En revisión":  "bg-amber-100 text-amber-800 border border-amber-300",
-  "Contactado":   "bg-blue-100 text-blue-800 border border-blue-300",
-  "Confirmado":   "bg-green-100 text-green-800 border border-green-300",
-  "En camino":    "bg-indigo-100 text-indigo-800 border border-indigo-300",
-  "Entregado":    "bg-emerald-100 text-emerald-800 border border-emerald-300",
-  "Cancelado":    "bg-red-100 text-red-800 border border-red-300",
+  "En revisión": "bg-amber-100 text-amber-800 border border-amber-300",
+  Contactado: "bg-blue-100 text-blue-800 border border-blue-300",
+  Confirmado: "bg-green-100 text-green-800 border border-green-300",
+  "En camino": "bg-indigo-100 text-indigo-800 border border-indigo-300",
+  Entregado: "bg-emerald-100 text-emerald-800 border border-emerald-300",
+  Cancelado: "bg-red-100 text-red-800 border border-red-300",
 };
 
 function BadgeEstado({ estado }: { estado: EstadoPedido | null }) {
   if (!estado) return <span className="text-gray-400 text-sm">—</span>;
   return (
-    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${ESTADO_ESTILOS[estado] ?? "bg-gray-100 text-gray-700"}`}>
+    <span
+      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${ESTADO_ESTILOS[estado] ?? "bg-gray-100 text-gray-700"}`}
+    >
       {estado}
     </span>
   );
@@ -24,7 +47,12 @@ function BadgeEstado({ estado }: { estado: EstadoPedido | null }) {
 import { useMemo, useState } from "react";
 
 // utils que ya tienes
-import { fmtFecha, openWhatsApp, buildWhatsAppHrefFromPedido, fetchItemsPedido } from "../../utils/whatsapp"; 
+import {
+  fmtFecha,
+  openWhatsApp,
+  buildWhatsAppHrefFromPedido,
+  fetchItemsPedido,
+} from "../../utils/whatsapp";
 // ^^^ si tu archivo se llama distinto, ajusta la ruta. IMPORTANTE: que `fetchItemsPedido` esté exportado.
 
 export default function PedidosAdminTabla() {
@@ -34,45 +62,81 @@ export default function PedidosAdminTabla() {
   const [ordenAscendente, setOrdenAscendente] = useState(false);
   const [enviandoWA, setEnviandoWA] = useState<number | null>(null);
 
+  const [seleccionados, setSeleccionados] = useState<Set<number>>(new Set());
+  const [descargandoZip, setDescargandoZip] = useState(false);
+  const [descargandoExcel, setDescargandoExcel] = useState(false);
 
-const pedidosFiltrados = useMemo(() => {
-  if (!data) return [];
-  let resultado = [...data];
+  const esDelivery = (p: PedidoResumen) =>
+    p.metodo_envio?.toLowerCase() === "delivery";
 
-  if (busqueda.trim()) {
-    const terminoBusqueda = busqueda.toLowerCase().trim();
-    
-    resultado = resultado.filter((p) => {
-      // Buscar por ID
-      const coincideId = p.id?.toString().includes(terminoBusqueda);
-      
-      // Buscar por nombre (con validación segura)
-      const nombre = (p.contacto_nombre || '').toLowerCase();
-      const coincideNombre = nombre.includes(terminoBusqueda);
-      
-      // Buscar por apellido (con validación segura)
-      const apellido = (p.contacto_apellido || '').toLowerCase();
-      const coincideApellido = apellido.includes(terminoBusqueda);
-      
-      // Buscar por teléfono (solo números)
-      const telefonoLimpio = (p.contacto_telefono || '').replace(/[^\d]/g, '');
-      const busquedaLimpia = terminoBusqueda.replace(/[^\d]/g, '');
-      const coincideTelefono = busquedaLimpia && telefonoLimpio.includes(busquedaLimpia);
-      
-      // Retornar true si coincide con cualquiera de los criterios
-      return coincideId || coincideNombre || coincideApellido || coincideTelefono;
+  function alternarSeleccion(id: number) {
+    setSeleccionados((prev) => {
+      const nuevo = new Set(prev);
+      if (nuevo.has(id)) nuevo.delete(id);
+      else nuevo.add(id);
+      return nuevo;
     });
   }
 
-  // Ordenar por fecha
-  resultado.sort((a, b) => {
-    const aTime = new Date(a.fecha_solicitud ?? a.creado_en ?? 0).getTime();
-    const bTime = new Date(b.fecha_solicitud ?? b.creado_en ?? 0).getTime();
-    return ordenAscendente ? aTime - bTime : bTime - aTime;
-  });
+  const pedidosFiltrados = useMemo(() => {
+    if (!data) return [];
+    let resultado = [...data];
 
-  return resultado;
-}, [data, busqueda, ordenAscendente]);
+    if (busqueda.trim()) {
+      const terminoBusqueda = busqueda.toLowerCase().trim();
+
+      resultado = resultado.filter((p) => {
+        // Buscar por ID
+        const coincideId = p.id?.toString().includes(terminoBusqueda);
+
+        // Buscar por nombre (con validación segura)
+        const nombre = (p.contacto_nombre || "").toLowerCase();
+        const coincideNombre = nombre.includes(terminoBusqueda);
+
+        // Buscar por apellido (con validación segura)
+        const apellido = (p.contacto_apellido || "").toLowerCase();
+        const coincideApellido = apellido.includes(terminoBusqueda);
+
+        // Buscar por teléfono (solo números)
+        const telefonoLimpio = (p.contacto_telefono || "").replace(
+          /[^\d]/g,
+          "",
+        );
+        const busquedaLimpia = terminoBusqueda.replace(/[^\d]/g, "");
+        const coincideTelefono =
+          busquedaLimpia && telefonoLimpio.includes(busquedaLimpia);
+
+        // Retornar true si coincide con cualquiera de los criterios
+        return (
+          coincideId || coincideNombre || coincideApellido || coincideTelefono
+        );
+      });
+    }
+
+    // Ordenar por fecha
+    resultado.sort((a, b) => {
+      const aTime = new Date(a.fecha_solicitud ?? a.creado_en ?? 0).getTime();
+      const bTime = new Date(b.fecha_solicitud ?? b.creado_en ?? 0).getTime();
+      return ordenAscendente ? aTime - bTime : bTime - aTime;
+    });
+
+    return resultado;
+  }, [data, busqueda, ordenAscendente]);
+
+  const idsDeliveryVisibles = useMemo(
+    () => pedidosFiltrados.filter(esDelivery).map((p) => p.id),
+    [pedidosFiltrados],
+  );
+
+  const todosSeleccionados =
+    idsDeliveryVisibles.length > 0 &&
+    idsDeliveryVisibles.every((id) => seleccionados.has(id));
+
+  function alternarSeleccionarTodos() {
+    setSeleccionados(
+      todosSeleccionados ? new Set() : new Set(idsDeliveryVisibles),
+    );
+  }
 
   async function handleWhatsApp(p: PedidoResumen) {
     try {
@@ -83,15 +147,15 @@ const pedidosFiltrados = useMemo(() => {
 
       // 2) Adaptamos a lo que espera el builder (nombre_producto, tamano, sabor_nombre, fecha_entrega, metodo_envio)
       const itemsAdaptados = (rawItems ?? []).map((r: any) => ({
-          nombre_producto:        r.nombre_producto        ?? "Producto",
-          tipo_formulario:        r.tipo_formulario         ?? null,
-          tamano:                 r.tamano                  ?? null,
-          cantidad:               r.cantidad                ?? null,
-          sabor_nombre:           r.sabor_nombre            ?? null,
-          fecha_entrega:          r.fecha_entrega           ?? null,
-          metodo_envio:           r.metodo_envio            ?? null,
-          detalle:                r.detalle                 ?? null,
-          ruta_imagen_referencia: r.ruta_imagen_referencia  ?? null,
+        nombre_producto: r.nombre_producto ?? "Producto",
+        tipo_formulario: r.tipo_formulario ?? null,
+        tamano: r.tamano ?? null,
+        cantidad: r.cantidad ?? null,
+        sabor_nombre: r.sabor_nombre ?? null,
+        fecha_entrega: r.fecha_entrega ?? null,
+        metodo_envio: r.metodo_envio ?? null,
+        detalle: r.detalle ?? null,
+        ruta_imagen_referencia: r.ruta_imagen_referencia ?? null,
       }));
 
       // 3) Armamos el payload que pide buildWhatsAppHrefFromPedido
@@ -112,6 +176,89 @@ const pedidosFiltrados = useMemo(() => {
     }
   }
 
+async function handleDescargarSeleccionados() {
+    if (seleccionados.size === 0) return;
+    setDescargandoZip(true);
+    try {
+      const { default: JSZip } = await import("jszip");
+      const zip = new JSZip();
+      const pedidosSeleccionados = pedidosFiltrados.filter((p) =>
+        seleccionados.has(p.id),
+      );
+
+      const entregasPorPedido = await obtenerDetallesEntregaPorPedidos(
+        pedidosSeleccionados.map((p) => p.id),
+      );
+
+      for (const p of pedidosSeleccionados) {
+        const entrega = entregasPorPedido.get(p.id);
+        const doc = await generarPdfEntrega({
+          nombre:
+            `${p.contacto_nombre ?? ""} ${p.contacto_apellido ?? ""}`.trim(),
+          telefono: p.contacto_telefono,
+          direccion: entrega?.direccion ?? null,
+          comuna: entrega?.comuna ?? null,
+          calleReferencia: entrega?.calle_referencia ?? null,
+          deptoOCasa: entrega?.depto_o_casa ?? null,
+          observacion: entrega?.observacion ?? null,
+          recibePedidoTitular: entrega?.recibe_pedido_titular ?? true,
+          receptorNombre: entrega?.receptor_nombre ?? null,
+          receptorApellido: entrega?.receptor_apellido ?? null,
+          receptorTelefono: entrega?.receptor_telefono ?? null,
+        });
+        zip.file(`pedido-${p.id}.pdf`, doc.output("arraybuffer"));
+      }
+
+      const blob = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(blob);
+      const enlace = document.createElement("a");
+      enlace.href = url;
+      enlace.download = `pedidos-delivery-${new Date().toISOString().slice(0, 10)}.zip`;
+      enlace.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("Error generando el zip de pedidos:", e);
+    } finally {
+      setDescargandoZip(false);
+    }
+  }
+
+async function handleDescargarExcelSeleccionados() {
+  if (seleccionados.size === 0) return;
+  setDescargandoExcel(true);
+  try {
+    const pedidosSeleccionados = pedidosFiltrados.filter((p) => seleccionados.has(p.id));
+
+    const entregasPorPedido = await obtenerDetallesEntregaPorPedidos(
+      pedidosSeleccionados.map((p) => p.id),
+    );
+
+    const filas = pedidosSeleccionados.map((p) => {
+      const entrega = entregasPorPedido.get(p.id);
+      return {
+        pedidoId: p.id,
+        nombre: `${p.contacto_nombre ?? ""} ${p.contacto_apellido ?? ""}`.trim(),
+        telefono: p.contacto_telefono,
+        direccion: entrega?.direccion ?? null,
+        comuna: entrega?.comuna ?? null,
+        calleReferencia: entrega?.calle_referencia ?? null,
+        deptoOCasa: entrega?.depto_o_casa ?? null,
+        observacion: entrega?.observacion ?? null,
+        recibePedidoTitular: entrega?.recibe_pedido_titular ?? true,
+        receptorNombre: entrega?.receptor_nombre ?? null,
+        receptorApellido: entrega?.receptor_apellido ?? null,
+        receptorTelefono: entrega?.receptor_telefono ?? null,
+      };
+    });
+
+    descargarExcelEntrega(filas, `pedidos-delivery-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  } catch (e) {
+    console.error("Error generando el Excel de pedidos:", e);
+  } finally {
+    setDescargandoExcel(false);
+  }
+}
+
   if (cargando) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
@@ -127,7 +274,9 @@ const pedidosFiltrados = useMemo(() => {
         <div className="w-14 h-14 bg-red-200 rounded-full flex items-center justify-center mx-auto mb-3">
           <span className="text-2xl">⚠️</span>
         </div>
-        <p className="text-red-800 font-bold text-lg">Error al cargar pedidos</p>
+        <p className="text-red-800 font-bold text-lg">
+          Error al cargar pedidos
+        </p>
         <p className="text-red-600 text-sm mt-2">{error}</p>
       </div>
     );
@@ -135,15 +284,19 @@ const pedidosFiltrados = useMemo(() => {
 
   // CAMBIO IMPORTANTE: Verificar si NO HAY DATOS EN ABSOLUTO (sin buscar)
   const noHayDatosIniciales = !data || data.length === 0;
-  
+
   if (noHayDatosIniciales) {
     return (
       <div className="bg-gradient-to-br from-gray-50 to-gray-100 border-2 border-gray-200 rounded-xl p-12 text-center">
         <div className="w-20 h-20 bg-gradient-to-br from-gray-200 to-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
           <Package className="w-10 h-10 text-gray-500" />
         </div>
-        <p className="text-gray-700 font-bold text-xl mb-2">No hay pedidos registrados</p>
-        <p className="text-gray-500">Los pedidos aparecerán aquí cuando los clientes realicen solicitudes.</p>
+        <p className="text-gray-700 font-bold text-xl mb-2">
+          No hay pedidos registrados
+        </p>
+        <p className="text-gray-500">
+          Los pedidos aparecerán aquí cuando los clientes realicen solicitudes.
+        </p>
       </div>
     );
   }
@@ -181,6 +334,28 @@ const pedidosFiltrados = useMemo(() => {
           <ArrowUpDown className="w-5 h-5" />
           {ordenAscendente ? "Más antiguos primero" : "Más recientes primero"}
         </button>
+
+        <button
+          onClick={handleDescargarSeleccionados}
+          disabled={seleccionados.size === 0 || descargandoZip}
+          className="flex items-center justify-center gap-2 px-6 py-3 bg-[#6F2521] text-white rounded-xl hover:bg-[#5a1e1a] transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {descargandoZip ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <Download className="w-5 h-5" />
+          )}
+          Descargar {seleccionados.size > 0 ? `(${seleccionados.size})` : ""}
+        </button>
+
+        <button
+          onClick={handleDescargarExcelSeleccionados}
+          disabled={seleccionados.size === 0 || descargandoExcel}
+          className="flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {descargandoExcel ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileSpreadsheet className="w-5 h-5" />}
+          Excel {seleccionados.size > 0 ? `(${seleccionados.size})` : ""}
+        </button>
       </div>
 
       {/* Mensaje cuando NO HAY RESULTADOS de la búsqueda */}
@@ -189,9 +364,12 @@ const pedidosFiltrados = useMemo(() => {
           <div className="w-16 h-16 bg-gradient-to-br from-amber-200 to-orange-300 rounded-full flex items-center justify-center mx-auto mb-4">
             <Search className="w-8 h-8 text-amber-700" />
           </div>
-          <p className="text-amber-900 font-bold text-lg mb-2">No se encontraron resultados</p>
+          <p className="text-amber-900 font-bold text-lg mb-2">
+            No se encontraron resultados
+          </p>
           <p className="text-amber-700 mb-4">
-            No hay pedidos que coincidan con "<span className="font-semibold">{busqueda}</span>"
+            No hay pedidos que coincidan con "
+            <span className="font-semibold">{busqueda}</span>"
           </p>
           <button
             onClick={() => setBusqueda("")}
@@ -220,7 +398,21 @@ const pedidosFiltrados = useMemo(() => {
                   </div>
                   Pedido #{p.id}
                 </Link>
-                <BadgeEstado estado={p.estado} />
+                <div className="flex items-center gap-3">
+                  <BadgeEstado estado={p.estado} />
+                  {esDelivery(p) && (
+                    <button
+                      type="button"
+                      onClick={() => alternarSeleccion(p.id)}
+                    >
+                      {seleccionados.has(p.id) ? (
+                        <CheckSquare className="w-5 h-5 text-[#6F2521]" />
+                      ) : (
+                        <Square className="w-5 h-5 text-gray-400" />
+                      )}
+                    </button>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-3">
@@ -229,7 +421,9 @@ const pedidosFiltrados = useMemo(() => {
                     <Calendar className="w-4 h-4 text-purple-600" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 font-medium mb-0.5">Fecha de solicitud</p>
+                    <p className="text-xs text-gray-500 font-medium mb-0.5">
+                      Fecha de solicitud
+                    </p>
                     <p className="text-sm text-gray-900 font-semibold">
                       {fmtFecha(p.fecha_solicitud ?? p.creado_en)}
                     </p>
@@ -241,7 +435,9 @@ const pedidosFiltrados = useMemo(() => {
                     <User className="w-4 h-4 text-blue-600" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 font-medium mb-0.5">Cliente</p>
+                    <p className="text-xs text-gray-500 font-medium mb-0.5">
+                      Cliente
+                    </p>
                     <p className="text-sm text-gray-900 font-semibold">
                       {p.contacto_nombre ?? "—"} {p.contacto_apellido ?? "—"}
                     </p>
@@ -253,7 +449,9 @@ const pedidosFiltrados = useMemo(() => {
                     <Phone className="w-4 h-4 text-green-600" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 font-medium mb-0.5">Teléfono</p>
+                    <p className="text-xs text-gray-500 font-medium mb-0.5">
+                      Teléfono
+                    </p>
                     {p.contacto_telefono ? (
                       <button
                         type="button"
@@ -261,7 +459,9 @@ const pedidosFiltrados = useMemo(() => {
                         disabled={enviandoWA === p.id}
                         className="text-sm text-[#6F2521] font-semibold hover:underline disabled:opacity-60"
                       >
-                        {enviandoWA === p.id ? "Abriendo WhatsApp…" : p.contacto_telefono}
+                        {enviandoWA === p.id
+                          ? "Abriendo WhatsApp…"
+                          : p.contacto_telefono}
                       </button>
                     ) : (
                       <p className="text-sm text-gray-400">—</p>
@@ -273,8 +473,12 @@ const pedidosFiltrados = useMemo(() => {
                     <Clock className="w-4 h-4 text-indigo-600" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-gray-500 font-medium mb-0.5">Hora de retiro</p>
-                    <p className="text-sm text-gray-900 font-semibold">{p.hora_retiro ?? "—"}</p>
+                    <p className="text-xs text-gray-500 font-medium mb-0.5">
+                      Hora de retiro
+                    </p>
+                    <p className="text-sm text-gray-900 font-semibold">
+                      {p.hora_retiro ?? "—"}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -299,46 +503,75 @@ const pedidosFiltrados = useMemo(() => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gradient-to-r from-gray-50 to-purple-50">
                 <tr>
+                  <th className="px-4 py-4">
+                    <button
+                      type="button"
+                      onClick={alternarSeleccionarTodos}
+                      disabled={idsDeliveryVisibles.length === 0}
+                      title="Seleccionar todos los delivery visibles"
+                    >
+                      {todosSeleccionados ? (
+                        <CheckSquare className="w-5 h-5 text-[#6F2521]" />
+                      ) : (
+                        <Square className="w-5 h-5 text-gray-400" />
+                      )}
+                    </button>
+                  </th>
+
                   <th className="px-6 py-4 text-left">
                     <div className="flex items-center gap-2">
                       <FileText className="w-4 h-4 text-[#6F2521]" />
-                      <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Nro Pedido</span>
+                      <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Nro Pedido
+                      </span>
                     </div>
                   </th>
                   <th className="px-6 py-4 text-left">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-4 h-4 text-purple-600" />
-                      <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Fecha Solicitud</span>
+                      <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Fecha Solicitud
+                      </span>
                     </div>
                   </th>
                   <th className="px-6 py-4 text-left">
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4 text-blue-600" />
-                      <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Nombre</span>
+                      <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Nombre
+                      </span>
                     </div>
                   </th>
                   <th className="px-6 py-4 text-left">
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4 text-blue-600" />
-                      <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Apellido</span>
+                      <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Apellido
+                      </span>
                     </div>
                   </th>
                   <th className="px-6 py-4 text-left">
                     <div className="flex items-center gap-2">
                       <Phone className="w-4 h-4 text-green-600" />
-                      <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Teléfono</span>
+                      <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Teléfono
+                      </span>
                     </div>
                   </th>
                   <th className="px-6 py-4 text-left">
                     <div className="flex items-center gap-2">
                       <Tag className="w-4 h-4 text-orange-500" />
-                      <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Estado</span>
+                      <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Estado
+                      </span>
                     </div>
                   </th>
                   <th className="px-6 py-4 text-left">
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-indigo-500" />
-                      <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">Hora retiro</span>
+                      <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Hora retiro
+                      </span>
                     </div>
                   </th>
                 </tr>
@@ -351,6 +584,27 @@ const pedidosFiltrados = useMemo(() => {
                       i % 2 === 0 ? "bg-white" : "bg-gray-50"
                     }`}
                   >
+                    <td className="px-4 py-4">
+                      {esDelivery(p) ? (
+                        <button
+                          type="button"
+                          onClick={() => alternarSeleccion(p.id)}
+                        >
+                          {seleccionados.has(p.id) ? (
+                            <CheckSquare className="w-5 h-5 text-[#6F2521]" />
+                          ) : (
+                            <Square className="w-5 h-5 text-gray-400" />
+                          )}
+                        </button>
+                      ) : (
+                        <span
+                          className="text-gray-300"
+                          title="Solo pedidos con envío Delivery"
+                        >
+                          —
+                        </span>
+                      )}
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <Link
                         to={`/admin/pedido/${p.id}`}
@@ -359,7 +613,9 @@ const pedidosFiltrados = useMemo(() => {
                         <div className="w-8 h-8 bg-gradient-to-br from-[#6F2521] to-[#8B3330] rounded-lg flex items-center justify-center">
                           <FileText className="w-4 h-4 text-white" />
                         </div>
-                        <span className="underline-offset-2 hover:underline">#{p.id}</span>
+                        <span className="underline-offset-2 hover:underline">
+                          #{p.id}
+                        </span>
                       </Link>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -368,10 +624,14 @@ const pedidosFiltrados = useMemo(() => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-900 font-semibold">{p.contacto_nombre ?? "—"}</span>
+                      <span className="text-sm text-gray-900 font-semibold">
+                        {p.contacto_nombre ?? "—"}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-900 font-semibold">{p.contacto_apellido ?? "—"}</span>
+                      <span className="text-sm text-gray-900 font-semibold">
+                        {p.contacto_apellido ?? "—"}
+                      </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {p.contacto_telefono ? (
@@ -382,7 +642,9 @@ const pedidosFiltrados = useMemo(() => {
                           className="inline-flex items-center gap-2 text-[#6F2521] font-semibold hover:text-[#8B3330] underline underline-offset-2 disabled:opacity-60"
                         >
                           <Phone className="w-4 h-4" />
-                          {enviandoWA === p.id ? "Abriendo WhatsApp…" : p.contacto_telefono}
+                          {enviandoWA === p.id
+                            ? "Abriendo WhatsApp…"
+                            : p.contacto_telefono}
                         </button>
                       ) : (
                         <span className="text-gray-400">—</span>
@@ -392,7 +654,9 @@ const pedidosFiltrados = useMemo(() => {
                       <BadgeEstado estado={p.estado} />
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-700 font-medium">{p.hora_retiro ?? "—"}</span>
+                      <span className="text-sm text-gray-700 font-medium">
+                        {p.hora_retiro ?? "—"}
+                      </span>
                     </td>
                   </tr>
                 ))}

@@ -1,4 +1,4 @@
-import type { CarritoItem } from "./types";
+import type { CarritoItem, DatosEntregaDelivery } from "./types";
 
 export interface PropsBarraLateral {
     estado: boolean;
@@ -71,3 +71,7 @@ email: string;
 crearCuenta: boolean;
 password: string;
 }
+
+    export interface FormularioDireccionEntregaRef {
+    getDatosEntrega: () => DatosEntregaDelivery | null;
+    }

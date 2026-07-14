@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import {useCartFunctions} from "../hooks/useCartFunctions"
-import type { CarritoItem, UID } from "../assets/types-interfaces/types";
+import type { CarritoItem, UID, DatosEntregaDelivery } from "../assets/types-interfaces/types";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../componentes/Navegacion/useCart";
 import { generaSolicitud } from "../hooks/useCheckoutFunction";
@@ -9,10 +9,13 @@ import { Cake, Edit3, ShoppingBag, Trash2, Users, Stars, ChevronDown, ChevronUp,
 import { useRef } from "react";
 import  FormularioContacto, {type FormularioContactoRef}  from "../componentes/ModuloCliente/FormularioContacto";
 import { supabase } from "../supabase/supabaseClient";
-import type { datosFormContacto } from '../assets/types-interfaces/interfaces';
+import type { datosFormContacto, FormularioDireccionEntregaRef} from '../assets/types-interfaces/interfaces';
 import { eliminarImagenReferenciaSupabase, importarImagenReferenciaPorRuta  } from "../hooks/useUploadImageSupabase";
 import FechaEntregaPicker from "../componentes/ModuloCliente/FechaEntregaPicker";
 import { toLocalISODate } from "../utils/fechas";
+import {FormularioDireccionEntrega} from "../componentes/ModuloCliente/FormularioDireccionEntrega";
+
+
 
 
 
@@ -31,6 +34,7 @@ export const CarritoDeCompras = () => {
   const redirigir = useNavigate();
 
   const refContacto = useRef<FormularioContactoRef>(null);
+  const refEntrega = useRef<FormularioDireccionEntregaRef>(null);
 
   const { vaciarCarrito  } = useCart();
   
@@ -45,10 +49,10 @@ const manejarConfirmacion = async () => {
     }
 
 
-    if (!horaRetiro.trim()) {
-    toast.warning("Indica la hora de entrega.");
-    return;
-}
+    if (metodoEnvio !== "Delivery" && !horaRetiro.trim()) {
+        toast.warning("Indica la hora de entrega.");
+        return;
+    }
 
     setConfirmando(true);
     try {
@@ -62,13 +66,23 @@ const manejarConfirmacion = async () => {
             datos = res;
         }
 
+        let datosEntrega: DatosEntregaDelivery | undefined = undefined;
+        if (metodoEnvio === "Delivery") {
+            const resEntrega = refEntrega.current?.getDatosEntrega();
+            if (!resEntrega) {
+                setConfirmando(false);
+                return;
+            }
+            datosEntrega = resEntrega;
+        }
+
         const datosEnvio = {
             metodoEnvio,
-            horaRetiro,
+            horaRetiro: metodoEnvio === "Delivery" ? undefined : horaRetiro,
             fechaEntrega: toLocalISODate(fechaEntrega),
         };
 
-        await generaSolicitud(items, datos, datosEnvio);
+        await generaSolicitud(items, datos, datosEnvio, datosEntrega);
         vaciarCarrito();
         vaciarProductosCarrito();
         redirigir("/solicitudExitosa");
@@ -309,20 +323,27 @@ const manejarConfirmacion = async () => {
               <option value="Retiro en domicilio">Retiro en domicilio</option>
               <option value="UberFlash">UberFlash</option>
               <option value="Metro cerro blanco">Metro Cerro Blanco</option>
+              <option value="Delivery">Delivery</option>
             </select>
           </div>
 
-          <div className="space-y-2">
-            <label className="block text-sm font-semibold text-gray-700">Hora de entrega</label>
-            <input
-              type="time"
-              value={horaRetiro}
-              onChange={(e) => setHoraRetiro(e.target.value)}
-              required
-              className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none"
-            />
-          </div>
+          {metodoEnvio !== "Delivery" && (
+            <div className="space-y-2">
+              <label className="block text-sm font-semibold text-gray-700">Hora de entrega</label>
+              <input
+                type="time"
+                value={horaRetiro}
+                onChange={(e) => setHoraRetiro(e.target.value)}
+                required
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 bg-white focus:ring-2 focus:ring-[#f57fa6] focus:border-transparent transition-all outline-none"
+              />
+            </div>
+          )}
         </div>
+
+        {metodoEnvio === "Delivery" && (
+          <FormularioDireccionEntrega ref={refEntrega} />
+        )}
 
         {sesion &&(
           <FormularioContacto ref={refContacto}/>

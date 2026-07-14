@@ -2,6 +2,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { actualizarEstadoPedido, obtenerPedidoDetalleAdmin } from "../../hooks/useOrders";
+import { descargarPdfEntrega } from "../../utils/pdfEntrega";
 import type { EstadoPedido } from "../../assets/types-interfaces/types";
 import {
   ArrowLeft,
@@ -19,7 +20,8 @@ import {
   Cookie,
   CheckCircle2,
   Truck,
-  Mail
+  Mail,
+  FileDown
 } from "lucide-react";
 
 const ESTADOS: EstadoPedido[] = ["En revisión", "Contactado", "Confirmado", "En camino", "Entregado", "Cancelado"];
@@ -85,6 +87,24 @@ export default function AdminPedidoDetalle() {
     } finally {
       setGuardandoEstado(false);
     }
+  }
+
+async function handleDescargarPdfEntrega() {
+    if (!cabecera) return;
+    const entrega = cabecera.entrega;
+    await descargarPdfEntrega({
+      nombre: `${cabecera.cliente_nombre ?? ""} ${cabecera.cliente_apellido ?? ""}`.trim(),
+      telefono: cabecera.cliente_telefono,
+      direccion: entrega?.direccion ?? null,
+      comuna: entrega?.comuna ?? null,
+      calleReferencia: entrega?.calle_referencia ?? null,
+      deptoOCasa: entrega?.depto_o_casa ?? null,
+      observacion: entrega?.observacion ?? null,
+      recibePedidoTitular: entrega?.recibe_pedido_titular ?? true,
+      receptorNombre: entrega?.receptor_nombre ?? null,
+      receptorApellido: entrega?.receptor_apellido ?? null,
+      receptorTelefono: entrega?.receptor_telefono ?? null,
+    }, `pedido-${cabecera.pedido_id}.pdf`);
   }
 
   // Construimos el href de WhatsApp a partir de la cabecera + items ya cargados
@@ -212,6 +232,18 @@ const waHref = useMemo(() => {
                 >
                   WhatsApp
                 </button>
+
+              {cabecera.metodo_envio?.toLowerCase() === "delivery" && (
+                <button
+                  type="button"
+                  onClick={handleDescargarPdfEntrega}
+                  className="hidden sm:inline-flex items-center gap-2 px-4 py-2 bg-white text-[#6F2521] rounded-lg hover:bg-pink-50 transition-colors font-semibold"
+                  title="Generar PDF de datos de entrega"
+                >
+                  <FileDown className="w-4 h-4" />
+                  PDF entrega
+                </button>
+              )}
               </div>
             </div>
           </div>

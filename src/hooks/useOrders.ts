@@ -57,6 +57,12 @@ const { data, error } = await supabase
 
 if (error) throw error;
 
+const { data: entrega } = await supabase
+    .from("pedido_delivery_detalle")
+    .select("*")
+    .eq("pedido_id", pedidoId)
+    .maybeSingle();
+
 const filas = (data ?? []);
 
 // Cabecera (misma en todas las filas)
@@ -72,6 +78,7 @@ const cabecera = filas[0]
         metodo_envio: filas[0].pedido_metodo_envio,
         hora_retiro: filas[0].pedido_hora_retiro,
         fecha_entrega: filas[0].pedido_fecha_entrega,
+        entrega, // ← detalle de delivery (null si no aplica o no existe)
     }
     : null;
 
@@ -96,6 +103,19 @@ const items = filas
     }));
 
 return { cabecera, items };
+}
+
+export async function obtenerDetallesEntregaPorPedidos(pedidoIds: number[]) {
+    if (pedidoIds.length === 0) return new Map<number, any>();
+
+    const { data, error } = await supabase
+        .from("pedido_delivery_detalle")
+        .select("*")
+        .in("pedido_id", pedidoIds);
+
+    if (error) throw error;
+
+    return new Map((data ?? []).map((fila) => [fila.pedido_id, fila]));
 }
 
 export async function actualizarEstadoPedido(pedidoId: number, nuevoEstado: EstadoPedido): Promise<void> {

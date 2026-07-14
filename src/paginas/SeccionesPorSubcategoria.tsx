@@ -67,7 +67,7 @@ export default function SeccionesPorSubcategoria() {
           <div className="mb-8 ">
             <div className="flex items-center justify-center gap-3 mb-3">
               <div className="h-[2px] w-12 bg-gradient-to-r from-transparent to-[#6F2521]" />
-              <h2 className="max-sm:text-2xl sm:text-4xl lg:text-4xl xl:text-4xl  font-bold text-[#6F2521] ">
+              <h2 className="max-sm:text-xl sm:text-4xl lg:text-4xl xl:text-4xl  font-bold text-[#6F2521] ">
                 {subcategoria.nombre}
               </h2>
               <div className="h-[2px] w-12 bg-gradient-to-l from-transparent to-[#6F2521]" />
